@@ -27,6 +27,9 @@ namespace WpfUsbApp1
     {
 
 
+        VolumeTemp volumeTemp = new VolumeTemp();
+        Boolean keepgoing = true;
+        Boolean done = false;
 
         public MainWindow()
         {
@@ -47,7 +50,6 @@ namespace WpfUsbApp1
             UsbDevice MyUsbDevice;
             UsbEndpointWriter Writer3;
             UsbEndpointWriter Writer4;
-            VolumeTemp volumeTemp = new VolumeTemp();
 
             MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
 
@@ -259,7 +261,13 @@ namespace WpfUsbApp1
                 }
 
                 cdisp = (cdisp + 1) % 8;
-            } while (true);
+            } while (keepgoing);
+
+            this.Dispatcher.Invoke(() =>
+            {
+                this.Close();
+                done = true;
+            });
         }
 
         private void Connect_Click(object sender, RoutedEventArgs e)
@@ -317,7 +325,7 @@ namespace WpfUsbApp1
         */
         private void Relist_Click(object sender, RoutedEventArgs e)
         {
-           // volumeTemp.OnSessionCreated(null, null);
+            volumeTemp.OnSessionCreated(null, null);
         }
 
         
@@ -356,6 +364,20 @@ namespace WpfUsbApp1
             //////////////////////
 
             ////UsbTransferQueue queue = new UsbTransferQueue()
+        }
+
+        public void stopUsbLoop()
+        {
+            keepgoing = false;
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (keepgoing)
+            {
+                e.Cancel = true;
+                Hide();
+            }
         }
     }
 }

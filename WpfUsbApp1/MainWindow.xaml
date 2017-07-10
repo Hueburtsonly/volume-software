@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfUsbApp1"
         mc:Ignorable="d"
+        Closing="Window_Closing"
         Title="Volume Controller of Greatness" Height="350" Width="525">
     <Grid>
         <Button x:Name="Connect" Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Click="Connect_Click" Margin="2,10,0,0"/>
