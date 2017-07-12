@@ -18,14 +18,12 @@ namespace WpfUsbApp1
             {
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixelGridFit;
                 g.Clear(Color.White);
-                
-                //g.DrawLine(Pens.Black, 0, 0, 128, 32);
-                //g.DrawString()
 
-                Font f = new Font("Arial Narrow", 24, FontStyle.Regular, GraphicsUnit.Pixel);
+
+                Font f = new Font("Arial", 24, FontStyle.Regular, GraphicsUnit.Pixel);
 
                 //TextRenderer.DrawText(g, s, f, new Rectangle(0, 0, 128, 32), Color.Black, TextFormatFlags.NoPadding | TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
-                g.DrawString(s, f, Brushes.Black, new RectangleF(0, 0, 128, 32));
+                g.DrawString(s, f, Brushes.Black, new RectangleF(-2, 0, 140, 32));
             }
             byte[] ret = new byte[516];
             ret[0] = 4;

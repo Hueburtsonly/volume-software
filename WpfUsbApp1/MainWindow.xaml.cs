@@ -29,7 +29,6 @@ namespace WpfUsbApp1
 
         VolumeTemp volumeTemp = new VolumeTemp();
         Boolean keepgoing = true;
-        Boolean done = false;
 
         public MainWindow()
         {
@@ -191,14 +190,14 @@ namespace WpfUsbApp1
                         bytesToSend[0] = (byte)(packet * 2);
                         for (int i = 0; i < 10; i++)
                         {
-                            bytesToSend[2 + 12 + i] = (peaks[0 + packet * 2] > limits[i] * slowpeaks[0 + packet * 2]) ? (byte)0xff : (byte)0;
-                            bytesToSend[2 + 36 + i] = (peaks[1 + packet * 2] > limits[i] * slowpeaks[1 + packet * 2]) ? (byte)0xff : (byte)0;
+                            bytesToSend[2 + 12 + i] = (peaks[0 + packet * 2] > limits[i] * slowpeaks[0 + packet * 2]) ? (byte)((i + 1) * (i + 1)) : (byte)0;
+                            bytesToSend[2 + 36 + i] = (peaks[1 + packet * 2] > limits[i] * slowpeaks[1 + packet * 2]) ? (byte)((i + 1) * (i + 1)) : (byte)0;
                         }
                         for (int i = 9; i >= 0; i--)
                         {
                             if (i == pips[0 + packet * 2])
                             {
-                                bytesToSend[2 + 0 + i] = 0xff;
+                                bytesToSend[2 + 0 + i] = (byte)((i + 1) );
                                 break;
                             }
                         }
@@ -206,10 +205,19 @@ namespace WpfUsbApp1
                         {
                             if (i == pips[1 + packet * 2])
                             {
-                                bytesToSend[2 + 24 + i] = 0xff;
+                                bytesToSend[2 + 24 + i] = (byte)((i + 1));
                                 break;
                             }
                         }
+
+                        /*
+                        // Green-to-Red gradient demo
+                        for (int i = 0; i < 10; i++)
+                        {
+                            bytesToSend[2 + 24 + i] = (byte)((i+1)/2 );
+                            bytesToSend[2 + 36 + i] = (byte)((9 - i)*2 );
+                        }
+                        // */
 
                         int eh;
                         ecWrite = Writer4.Transfer(bytesToSend, 0, bytesToSend.Length, 100, out eh);
@@ -219,7 +227,11 @@ namespace WpfUsbApp1
                             throw new Exception("Submit Async Write Failed.");
                         }
                     }
-
+                    //*
+                    //if ((sbyte)(readBuffer[10]) != 0)
+                    
+                    //    dispstate[2] = -1;
+                    
                     String dispString = "";
                     if (cdisp < 3 && dispstate[cdisp] != newstate[cdisp])
                     {
@@ -246,13 +258,14 @@ namespace WpfUsbApp1
                         byte[] bytesLcdToSend = ImageTemp.GenImageStream((byte)cdisp, dispString);
                         int usbLcdWriteTransfer;
 
-                        ecLcdWrite = Writer3.Transfer(bytesLcdToSend, 0, bytesLcdToSend.Length, 100, out usbLcdWriteTransfer);
+                        ecLcdWrite = Writer3.Transfer(bytesLcdToSend, 0, bytesLcdToSend.Length, 900, out usbLcdWriteTransfer);
                         if (ecLcdWrite != ErrorCode.None)
                         {
                             // usbReadTransfer.Dispose();
                             throw new Exception("Submit Async Write Failed.");
                         }
                     }
+                    // */
 
 
 
@@ -266,7 +279,6 @@ namespace WpfUsbApp1
             this.Dispatcher.Invoke(() =>
             {
                 this.Close();
-                done = true;
             });
         }
 
