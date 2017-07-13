@@ -182,16 +182,24 @@ namespace WpfUsbApp1
                     {
 
                         ErrorCode ecWrite;
-                        var bytesToSend = new byte[50];
-                        for (int i = 0; i < 50; i++)
+                        var bytesToSend = new byte[52];
+                        for (int i = 0; i < 52; i++)
                         {
-                            bytesToSend[i] = (((i - 12) % 12) == 0 && i >= 2 && i < 126 - packet * 100) ? (byte)0xff : (byte)0;
+                            bytesToSend[i] = (byte)0;
                         }
                         bytesToSend[0] = (byte)(packet * 2);
+                        bytesToSend[26] = (byte)(packet * 2 + 1);
+                        bytesToSend[2 + 10] = 0xff;
+                        bytesToSend[2 + 22] = 0xff;
+                        if (packet < 1)
+                        {
+                            bytesToSend[2 + 36] = 0xff;
+                            bytesToSend[2 + 48] = 0xff;
+                        }
                         for (int i = 0; i < 10; i++)
                         {
                             bytesToSend[2 + 12 + i] = (peaks[0 + packet * 2] > limits[i] * slowpeaks[0 + packet * 2]) ? (byte)((i + 1) * (i + 1)) : (byte)0;
-                            bytesToSend[2 + 36 + i] = (peaks[1 + packet * 2] > limits[i] * slowpeaks[1 + packet * 2]) ? (byte)((i + 1) * (i + 1)) : (byte)0;
+                            bytesToSend[2 + 38 + i] = (peaks[1 + packet * 2] > limits[i] * slowpeaks[1 + packet * 2]) ? (byte)((i + 1) * (i + 1)) : (byte)0;
                         }
                         for (int i = 9; i >= 0; i--)
                         {
@@ -205,7 +213,7 @@ namespace WpfUsbApp1
                         {
                             if (i == pips[1 + packet * 2])
                             {
-                                bytesToSend[2 + 24 + i] = (byte)((i + 1));
+                                bytesToSend[2 + 26 + i] = (byte)((i + 1));
                                 break;
                             }
                         }
