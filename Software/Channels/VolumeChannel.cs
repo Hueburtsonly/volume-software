@@ -143,7 +143,9 @@ namespace Software.Channels
         float slowpeaks = 0;
         int pips = -1;
         int ttph = 0;
+        int prevIsActive = -1;
 
+        int cycle = 0;
 
         public void HandleFrame(sbyte encoderDelta, byte buttonState, out byte[] ledState, out byte[] lcdImage)
         {
@@ -187,26 +189,42 @@ namespace Software.Channels
                 }
             }
 
-
-            lcdImage = ImageUtil.GenImageStream(isActive ? displayName : "");
+            int newIsActive = isActive ? 1 : 0;
+            if (prevIsActive != newIsActive)
+            {
+                lcdImage = ImageUtil.GenImageStream(isActive ? displayName : "");
+                prevIsActive = newIsActive;
+            } else
+            {
+                lcdImage = null;
+            }
 
             ledState = new byte[21];
             ledState[20] = 0x80;
 
+            //*
             for (int i = 0; i < 10; i++)
             {
-                ledState[10 + i] = (peak > limits[i] * slowpeaks) ? (byte)((i + 1) * (i + 1)) : (byte)0;
+                ledState[10 + i] = (peak > limits[i] * slowpeaks) ? (byte)((i + 1) * 25) : (byte)0;
                     
             }
             for (int i = 9; i >= 0; i--)
             {
                 if (i == pips)
                 {
-                    ledState[i] = (byte)((i + 1));
+                    ledState[i] = (byte)((i + 1) * 8);
                     break;
                 }
             }
-
+            /*/
+            if (isActive)
+            for (int i = 0; i < 10; i++)
+            {
+                ledState[10 + i] = (byte)(Math.Abs(cycle) * (i+1));
+            }
+            cycle++;
+            if (cycle == 26) cycle = -24;
+            // */
         }
     }
 }
