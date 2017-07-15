@@ -124,12 +124,18 @@ namespace Software.Channels
         private AudioSessionControl session = null;
         private String exeSuffix;
         private String displayName;
+        private NewSessionHandler newSessionHandler;
 
         public VolumeChannel(String displayName, String exeSuffix)
         {
             this.displayName = displayName;
             this.exeSuffix = exeSuffix;
-            newSessionEvent += new NewSessionHandler(HandleNewSession);
+            newSessionEvent += newSessionHandler = new NewSessionHandler(HandleNewSession);
+        }
+
+        ~VolumeChannel()
+        {
+            newSessionEvent -= newSessionHandler;
         }
 
         private void HandleNewSession(AudioSessionControl newSession, String filename)

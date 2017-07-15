@@ -17,6 +17,9 @@ namespace Software
         [STAThread]
         static void Main(string[] args)
         {
+
+            Console.WriteLine(Software.Properties.Resources.BuiltInLua);
+
             new Thread(MainLoop.Run).Start();
         }
     }

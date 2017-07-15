@@ -1,0 +1,4 @@
+AddChannel(0, "Teamspeak", "ts3client_win64.exe")
+AddChannel(1, "Rocket", "RocketLeague.exe")
+AddChannel(2, "Chrome", "chrome.exe")
+

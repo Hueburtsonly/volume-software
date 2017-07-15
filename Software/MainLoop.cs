@@ -17,6 +17,8 @@ namespace Software
         public static void Run()
         {
 
+            Channel[] channels = LuaManager.StartLua();
+
             UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(0x6b56, 0x8802);
             UsbDevice MyUsbDevice;
 
@@ -48,7 +50,8 @@ namespace Software
             UsbEndpointWriter Writer4 = MyUsbDevice.OpenEndpointWriter(WriteEndpointID.Ep04);
             UsbEndpointReader reader = MyUsbDevice.OpenEndpointReader(ReadEndpointID.Ep03);
 
-            Channel[] channels = { new VolumeChannel("Teamspeak", "ts3client_win64.exe"), new VolumeChannel("Rocket", "RocketLeague.exe"), new VolumeChannel("Chrome", "chrome.exe"), new VolumeChannel("XXX", "XXX") };
+            //Channel[] channels = { new VolumeChannel("Teamspeak", "ts3client_win64.exe"), new VolumeChannel("Rocket", "RocketLeague.exe"), new VolumeChannel("Chrome", "chrome.exe"), new VolumeChannel("XXX", "XXX") };
+            
             int[] enc = new int[ChannelCount];
             byte[][] wantedLedState = new byte[ChannelCount][]; // 21
             byte[][] wantedLcdImage = new byte[ChannelCount][]; // 512
@@ -73,7 +76,10 @@ namespace Software
                     for (int i = 0; i < ChannelCount; i++)
                     {
                         enc[i] += (sbyte)(readBuffer[6 + 2*i]);
-                        channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], out wantedLedState[i], out wantedLcdImage[i]);
+                        byte[] newLedState, newLcdImage;
+                        channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], out newLedState, out newLcdImage);
+                        if (newLedState != null) wantedLedState[i] = newLedState;
+                        if (newLcdImage != null) wantedLcdImage[i] = newLcdImage;
                     }
 
   
@@ -128,6 +134,9 @@ namespace Software
                                 {
                                     // usbReadTransfer.Dispose();
                                     throw new Exception("Submit Async Write Failed.");
+                                } else
+                                {
+                                    Console.WriteLine("Wrote to LCD {0}", lcdCursor);
                                 }
                                 break;
                             }
