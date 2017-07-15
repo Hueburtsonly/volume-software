@@ -206,7 +206,10 @@ namespace Software.Channels
             }
 
             ledState = new byte[21];
-            ledState[20] = 0x80;
+            if (isActive)
+            {
+                ledState[20] = 0x80;
+            }
 
             //*
             for (int i = 0; i < 10; i++)

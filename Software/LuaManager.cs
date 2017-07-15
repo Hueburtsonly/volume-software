@@ -28,7 +28,8 @@ namespace Software
 
             Script script = new Script();
 
-            script.Globals["AddChannel"] = (Func<int, String, String, int>)((int c, String displayName, String exeSuffix) => { channels[c] = new VolumeChannel(displayName, exeSuffix); return 0; });
+            script.Globals["AddVolumeChannel"] = (Func<int, String, String, int>)((int c, String displayName, String exeSuffix) => { channels[c] = new VolumeChannel(displayName, exeSuffix); return 0; });
+            script.Globals["AddLuaChannel"] = (Func<int, DynValue, int>)((int c, DynValue config) => { channels[c] = new LuaChannel(config); return 0; });
 
             script.DoString(Software.Properties.Resources.BuiltInLua);
 

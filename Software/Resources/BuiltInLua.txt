@@ -1,4 +1,30 @@
-AddChannel(0, "Teamspeak", "ts3client_win64.exe")
-AddChannel(1, "Rocket", "RocketLeague.exe")
-AddChannel(2, "Chrome", "chrome.exe")
+function toggle(b, default)
+	return (math.floor((b+1)/2)+default+1) % 2 == 0
+end
 
+
+-----------------------------------------------------------
+
+AddVolumeChannel(0, "Teamspeak", "ts3client_win64.exe")
+AddVolumeChannel(3, "Rocket", "RocketLeague.exe")
+AddVolumeChannel(2, "Chrome", "chrome.exe")
+
+encValue = 0
+
+function f(e, b)
+	encValue = encValue + e
+
+	leds = {}
+	for i = 1,20 do
+		leds[i] = 0
+	end
+
+	leds[((encValue % 20)+20)%20 + 1] = 128
+	if toggle(b, 0) then
+		leds[21] = 128
+	end
+
+	return "Lua: " .. encValue, leds
+end
+
+AddLuaChannel(1, f)

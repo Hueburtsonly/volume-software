@@ -76,6 +76,7 @@
     </Compile>
     <Compile Include="Channels\Channel.cs" />
     <Compile Include="Channels\ImageUtil.cs" />
+    <Compile Include="Channels\LuaChannel.cs" />
     <Compile Include="Channels\VolumeChannel.cs" />
     <Compile Include="LuaManager.cs" />
     <Compile Include="MainLoop.cs" />
