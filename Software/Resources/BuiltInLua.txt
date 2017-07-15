@@ -2,11 +2,23 @@ function toggle(b, default)
 	return (math.floor((b+1)/2)+default+1) % 2 == 0
 end
 
+function BlankLeds(backlight) 
+	leds = {}
+	for i = 1,20 do
+		leds[i] = 0
+	end
+	leds[21] = backlight
+	return leds
+end
+
+function AddTimeChannel(c)
+	AddLuaChannel(c, function(e, b) return os.date("%H:%M"), BlankLeds(0) end)
+end
 
 -----------------------------------------------------------
 
 AddVolumeChannel(0, "Teamspeak", "ts3client_win64.exe")
-AddVolumeChannel(3, "Rocket", "RocketLeague.exe")
+AddVolumeChannel(1, "Rocket", "RocketLeague.exe")
 AddVolumeChannel(2, "Chrome", "chrome.exe")
 
 encValue = 0
@@ -14,10 +26,7 @@ encValue = 0
 function f(e, b)
 	encValue = encValue + e
 
-	leds = {}
-	for i = 1,20 do
-		leds[i] = 0
-	end
+	leds = BlankLeds(0)
 
 	leds[((encValue % 20)+20)%20 + 1] = 128
 	if toggle(b, 0) then
@@ -27,4 +36,4 @@ function f(e, b)
 	return "Lua: " .. encValue, leds
 end
 
-AddLuaChannel(1, f)
+AddTimeChannel(3)
