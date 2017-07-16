@@ -26,12 +26,8 @@ namespace Software.Channels
             LuaChannel nc = new LuaChannel(config);
             channel = nc;
             DynValue ret = DynValue.NewTable(script);
-            ret.Table.Set("SetPeriod", DynValue.FromObject(script,
-                
-                //CallbackFunction.FromDelegate(script, 
-                (Func<double, DynValue>)((double newPeriod) => { nc.period = newPeriod; return ret; })
-                //)
-                ));
+            ret.Table["SetPeriod"] =
+                (Func<double, DynValue>)((double newPeriod) => { nc.period = newPeriod; return ret; });
             return ret;
         }
 
