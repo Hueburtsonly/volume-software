@@ -12,7 +12,12 @@ function BlankLeds(backlight)
 end
 
 function AddTimeChannel(c)
-	AddLuaChannel(c, function(e, b) return os.date("%H:%M"), BlankLeds(0) end)
+	return AddLuaChannel(c, function(e, b) return os.date("%H:%M"), BlankLeds(0) end)
+end
+
+frameCount = 0
+function AddFrameCounterChannel(c)
+	return AddLuaChannel(c, function(e, b) frameCount = frameCount + 1 return ""..frameCount, BlankLeds(128) end)
 end
 
 -----------------------------------------------------------
@@ -37,3 +42,4 @@ function f(e, b)
 end
 
 AddTimeChannel(3)
+-- AddFrameCounterChannel(3).SetPeriod(1000)

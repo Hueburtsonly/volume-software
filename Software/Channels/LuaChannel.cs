@@ -11,6 +11,9 @@ namespace Software.Channels
     class LuaChannel : Channel
     {
         private DynValue config;
+        double period = 0;
+        private Stopwatch stopwatch = null;
+        private double nextMatchMs = 0;
 
         public LuaChannel(DynValue config)
         {
@@ -18,10 +21,41 @@ namespace Software.Channels
             this.config = config;
         }
 
+        public static DynValue ConstructForLua(Script script, DynValue config, out LuaChannel channel)
+        {
+            LuaChannel nc = new LuaChannel(config);
+            channel = nc;
+            DynValue ret = DynValue.NewTable(script);
+            ret.Table.Set("SetPeriod", DynValue.FromObject(script,
+                
+                //CallbackFunction.FromDelegate(script, 
+                (Func<double, DynValue>)((double newPeriod) => { nc.period = newPeriod; return ret; })
+                //)
+                ));
+            return ret;
+        }
+
         String prevString = null;
 
         public void HandleFrame(sbyte encoderDelta, byte buttonState, out byte[] ledState, out byte[] lcdImage)
         {
+            if (period != 0)
+            {
+                if (stopwatch == null)
+                {
+                    stopwatch = new Stopwatch();
+                    stopwatch.Start();
+                }
+                else if (stopwatch.ElapsedMilliseconds < nextMatchMs)
+                {
+                    ledState = null;
+                    lcdImage = null;
+                    return;
+                }
+                
+                nextMatchMs += period;
+            }
+
             DynValue ret = config.Function.Call(encoderDelta, buttonState);
             Trace.Assert(ret.Type == DataType.Tuple);
             Trace.Assert(ret.Tuple[0].Type == DataType.String);
