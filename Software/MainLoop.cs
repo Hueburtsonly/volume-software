@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Software
@@ -14,7 +15,7 @@ namespace Software
     {
         private const byte ChannelCount = 4;
 
-        public static void Run()
+        public static void Run(CancellationToken exitToken)
         {
 
             Channel[] channels = LuaManager.StartLua();
@@ -75,18 +76,18 @@ namespace Software
 
                     for (int i = 0; i < ChannelCount; i++)
                     {
-                        enc[i] += (sbyte)(readBuffer[6 + 2*i]);
+                        enc[i] += (sbyte)(readBuffer[6 + 2 * i]);
                         byte[] newLedState, newLcdImage;
                         channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], out newLedState, out newLcdImage);
                         if (newLedState != null) wantedLedState[i] = newLedState;
                         if (newLcdImage != null) wantedLcdImage[i] = newLcdImage;
                     }
 
-  
+
 
                     {
                         IEnumerable<byte> buffer = new byte[0];
-                        for (int i=0; i < ChannelCount && buffer.Count() < 52; i++)
+                        for (int i = 0; i < ChannelCount && buffer.Count() < 52; i++)
                         {
                             if (wantedLedState[ledCursor] != null && (actualLedState[ledCursor] == null || !wantedLedState[ledCursor].SequenceEqual(actualLedState[ledCursor])))
                             {
@@ -134,7 +135,8 @@ namespace Software
                                 {
                                     // usbReadTransfer.Dispose();
                                     throw new Exception("Submit Async Write Failed.");
-                                } else
+                                }
+                                else
                                 {
                                     Console.WriteLine("Wrote to LCD {0}", lcdCursor);
                                 }
@@ -151,7 +153,7 @@ namespace Software
                     Console.WriteLine("Didn't get an interrupt packet?????");
                 }
 
-            } while (true);
+            } while (!(exitToken.IsCancellationRequested));
 
         }
     }

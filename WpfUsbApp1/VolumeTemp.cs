@@ -65,7 +65,7 @@ namespace WpfUsbApp1
                         Process p = Process.GetProcessById((int)(session.GetProcessID));
                         fn = ProcessExecutablePath(p);
                     }
-                    catch (Exception e) { }
+                    catch { }
 
                     if (state != AudioSessionState.AudioSessionStateExpired)
                     {

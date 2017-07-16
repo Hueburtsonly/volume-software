@@ -61,13 +61,40 @@ namespace Software.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Why Hello there.
+        ///   Looks up a localized string similar to function toggle(b, default)
+        ///	return (math.floor((b+1)/2)+default+1) % 2 == 0
+        ///end
         ///
-        ///This is a test..
+        ///function BlankLeds(backlight) 
+        ///	leds = {}
+        ///	for i = 1,20 do
+        ///		leds[i] = 0
+        ///	end
+        ///	leds[21] = backlight
+        ///	return leds
+        ///end
+        ///
+        ///function AddTimeChannel(c)
+        ///	return AddLuaChannel(c, function(e, b) return os.date(&quot;%H:%M&quot;), BlankLeds(0) end)
+        ///end
+        ///
+        ///invocationCount = 0
+        ///function AddInvocationCounterChannel(c)
+        ///	return AddLuaChannel(c, function(e, b) invocationCount = invocationCount + 1 return &quot;&quot;..invocationCount, BlankLeds(12 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string BuiltInLua {
             get {
                 return ResourceManager.GetString("BuiltInLua", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon MainIcon {
+            get {
+                object obj = ResourceManager.GetObject("MainIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
     }

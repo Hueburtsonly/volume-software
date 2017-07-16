@@ -101,7 +101,6 @@ namespace WpfUsbApp1
             limits[0] = 0;
 
             ErrorCode ecRead;
-            UsbTransfer usbReadTransfer;
             UsbEndpointReader reader = MyUsbDevice.OpenEndpointReader(ReadEndpointID.Ep03);
             int transferredIn;
             do

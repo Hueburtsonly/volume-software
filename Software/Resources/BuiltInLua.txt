@@ -15,12 +15,14 @@ function AddTimeChannel(c)
 	return AddLuaChannel(c, function(e, b) return os.date("%H:%M"), BlankLeds(0) end)
 end
 
-frameCount = 0
-function AddFrameCounterChannel(c)
-	return AddLuaChannel(c, function(e, b) frameCount = frameCount + 1 return ""..frameCount, BlankLeds(128) end)
+invocationCount = 0
+function AddInvocationCounterChannel(c)
+	return AddLuaChannel(c, function(e, b) invocationCount = invocationCount + 1 return ""..invocationCount, BlankLeds(128) end)
 end
 
 -----------------------------------------------------------
+-- Loosely speaking, stuff above this line should stay compiled into the application, whereas
+-- stuff below this line should be moved out into a user-accessible config file.
 
 AddVolumeChannel(0, "Teamspeak", "ts3client_win64.exe")
 AddVolumeChannel(1, "Rocket", "RocketLeague.exe")
@@ -42,4 +44,5 @@ function f(e, b)
 end
 
 AddTimeChannel(3)
--- AddFrameCounterChannel(3).SetPeriod(1000)
+-- AddInvocationCounterChannel(3).SetPeriod(1000)
+-- AddLuaChannel(1, f)
