@@ -12,7 +12,6 @@ namespace Software.Channels
 {
     class VolumeChannel : Channel
     {
-
         static MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
         static MMDevice device;
         static AudioSessionManager sessManager;
@@ -30,12 +29,12 @@ namespace Software.Channels
 
             for (int i = 0; i < 10; i++)
             {
-                limits[i] = (float)(Math.Pow(1.2, i - 10));
-                ttphl[i] = (150 - (9 - i) * (9 - i)) / 5;
-                if (i > 0 && ttphl[i] <= ttphl[i - 1])
-                    ttphl[i] = ttphl[i - 1] + 1;
+                ledThresholds[i] = (float)(Math.Pow(1.2, i - 10));
+                timesToLowerPip[i] = (150 - (9 - i) * (9 - i)) / 5;
+                if (i > 0 && timesToLowerPip[i] <= timesToLowerPip[i - 1])
+                    timesToLowerPip[i] = timesToLowerPip[i - 1] + 1;
             }
-            limits[0] = 0;
+            ledThresholds[0] = 0;
 
         }
 
@@ -112,14 +111,30 @@ namespace Software.Channels
             return "oopsie";
         }
 
-        private static int[] ttphl = new int[10];
-        private static float[] limits = new float[10];
-
+        // Whenever a new session is created, this event is fired for every non-expired session.
         private static event NewSessionHandler newSessionEvent;
-
         private delegate void NewSessionHandler(AudioSessionControl session, String filename);
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        private static float[] ledThresholds = new float[10];
+
+        // Controls the descent of the red "pip" which stays high for a little while, and then
+        // "falls". For each value x in this array, if the pip hasn't been raised for x frames,
+        // it is moved down by one LED.
+        private static int[] timesToLowerPip = new int[10];
+
+        // Current location of the peak-tracking red "pip", and the number of frames since the 
+        // last time it moved.
+        private int pipLocation = -1;
+        private int timeSincePipRaised = 0;
+        private int prevIsActive = -1;
+
+        // Keeps track of the highest peak value seen from this session, slowly decays over time.
+        // Used to enable quieter apps to still use the full range of the LED display.
+        private float recentMaximum = 0;
+
+        // Counts down the number of frames of silence remaining until this channel is considered
+        // inactive.
+        private int silenceTimeout = -1;
 
         private AudioSessionControl session = null;
         private String exeSuffix;
@@ -146,13 +161,6 @@ namespace Software.Channels
             }
         }
 
-        float slowpeaks = 0;
-        int pips = -1;
-        int ttph = 0;
-        int prevIsActive = -1;
-
-        int cycle = 0;
-
         public void HandleFrame(sbyte encoderDelta, byte buttonState, out byte[] ledState, out byte[] lcdImage)
         {
             MaybeRefreshSessions();
@@ -165,33 +173,51 @@ namespace Software.Channels
                 peak = session.AudioMeterInformation.MasterPeakValue;
                 isActive = (session.State == AudioSessionState.AudioSessionStateActive);
             }
-
-
-            slowpeaks *= 0.998f;
-            if (peak > slowpeaks)
+            if (isActive)
             {
-                slowpeaks = peak;
+                if (peak == 0)
+                {
+                    if (silenceTimeout < 0)
+                    {
+                        isActive = false;
+                    }
+                    else
+                    {
+                        silenceTimeout--;
+                    }
+                }
+                else
+                {
+                    silenceTimeout = 300;
+                }
+            }
+
+
+            recentMaximum *= 0.998f;
+            if (peak > recentMaximum)
+            {
+                recentMaximum = peak;
             }
             int cpiploc = -1;
             for (int i = 9; i >= 0; i--)
             {
-                if (peak > limits[i] * slowpeaks)
+                if (peak > ledThresholds[i] * recentMaximum)
                 {
                     cpiploc = i;
                     break;
                 }
             }
-            if (cpiploc >= pips)
+            if (cpiploc >= pipLocation)
             {
-                pips = cpiploc;
-                ttph = 0;
+                pipLocation = cpiploc;
+                timeSincePipRaised = 0;
             }
             else
             {
-                ++ttph;
+                ++timeSincePipRaised;
                 for (int i = 0; i < 10; i++)
                 {
-                    if (ttph == ttphl[i]) --pips;
+                    if (timeSincePipRaised == timesToLowerPip[i]) --pipLocation;
                 }
             }
 
@@ -214,12 +240,12 @@ namespace Software.Channels
             //*
             for (int i = 0; i < 10; i++)
             {
-                ledState[10 + i] = (peak > limits[i] * slowpeaks) ? (byte)((i + 1) * 25) : (byte)0;
+                ledState[10 + i] = (peak > ledThresholds[i] * recentMaximum) ? (byte)((i + 1) * 25) : (byte)0;
                     
             }
             for (int i = 9; i >= 0; i--)
             {
-                if (i == pips)
+                if (i == pipLocation)
                 {
                     ledState[i] = (byte)((i + 1) * 8);
                     break;
