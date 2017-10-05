@@ -27,6 +27,7 @@ end
 AddVolumeChannel(0, "Teamspeak", "ts3client_win64.exe")
 AddVolumeChannel(1, "Rocket", "RocketLeague.exe")
 AddVolumeChannel(2, "Chrome", "chrome.exe")
+AddVolumeChannel(3, "Foobar", "foobar2000.exe")
 
 encValue = 0
 
@@ -43,6 +44,6 @@ function f(e, b)
 	return "Lua: " .. encValue, leds
 end
 
-AddTimeChannel(3)
+-- AddTimeChannel(3)
 -- AddInvocationCounterChannel(3).SetPeriod(1000)
 -- AddLuaChannel(1, f)

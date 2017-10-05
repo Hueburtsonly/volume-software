@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Serilog;
+using Serilog.Events;
 
 namespace Software.Logging
 {
@@ -12,13 +10,8 @@ namespace Software.Logging
     /// </summary>
     public class SerilogLoggingProvider : LoggingProvider
     {
-        #region Member Variables and Constants
 
-        private ILogger _log;
-
-        #endregion
-
-        #region Constructors
+        private readonly ILogger _log;
 
         /// <summary>
         /// Constructs an instance of SerilogLoggingProvider.
@@ -42,9 +35,6 @@ namespace Software.Logging
             _log = configuration.CreateLogger();
         }
 
-        #endregion
-
-        #region Methods
 
         /// <summary>
         /// Logs a debug message.
@@ -173,6 +163,5 @@ namespace Software.Logging
             return (LogEventLevel)(level + 1);
         }
 
-        #endregion
     }
 }

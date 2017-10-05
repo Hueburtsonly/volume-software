@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Software.Logging
 {
@@ -7,8 +9,6 @@ namespace Software.Logging
     /// </summary>
     public abstract class LoggingProvider
     {
-        #region Properties
-
         /// <summary>
         /// Gets a boolean value indicating if the log level is enabled.
         /// </summary>
@@ -44,10 +44,6 @@ namespace Software.Logging
             [DebuggerStepThrough]
             get { return IsLogLevelEnabled(LogLevel.Warn); }
         }
-
-        #endregion
-
-        #region Methods
 
         /// <summary>
         /// Logs a debug message.
@@ -147,7 +143,5 @@ namespace Software.Logging
         /// <param name="messageTemplate">The message template.</param>
         /// <param name="args">Any arguments to pass to the message template.</param>
         public abstract void Warn(Exception ex, string messageTemplate, params object[] args);
-
-        #endregion
     }
 }

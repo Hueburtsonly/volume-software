@@ -5,9 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using Software.Logging;
 
 namespace Software
 {
@@ -15,9 +14,8 @@ namespace Software
     {
         private const byte ChannelCount = 4;
 
-        public static void Run(CancellationToken exitToken)
+        public static void Run(CancellationToken exitToken, LoggingProvider logger)
         {
-
             Channel[] channels = LuaManager.StartLua();
 
             UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(0x6b56, 0x8802);
@@ -66,7 +64,11 @@ namespace Software
                 int transferredIn;
                 byte[] readBuffer = new byte[38];
                 ErrorCode ecRead = reader.Transfer(readBuffer, 0, readBuffer.Length, 100, out transferredIn);
-                if (ecRead != ErrorCode.None) throw new Exception("Submit Async Read Failed.");
+                if (ecRead != ErrorCode.None)
+                {
+                    logger.Error($"Submit Async Read Failed. ErrorCode: {ecRead}");
+                    return;
+                }
 
 
                 if (transferredIn > 0)
@@ -115,7 +117,8 @@ namespace Software
                             if (ecWrite != ErrorCode.None)
                             {
                                 // usbReadTransfer.Dispose();
-                                throw new Exception("Submit Async Write Failed.");
+                                logger.Error($"Submit Async Write Failed on Writer4. ErrorCode: {ecWrite}");
+                                return;
                             }
                         }
                     }
@@ -134,11 +137,12 @@ namespace Software
                                 if (ecLcdWrite != ErrorCode.None)
                                 {
                                     // usbReadTransfer.Dispose();
-                                    throw new Exception("Submit Async Write Failed.");
+                                    logger.Error($"Submit Async Write Failed on Writer3. ErrorCode: {ecLcdWrite}");
+                                    return;
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Wrote to LCD {0}", lcdCursor);
+                                    logger.Info($"Wrote to LCD {lcdCursor}");
                                 }
                                 break;
                             }
@@ -150,7 +154,7 @@ namespace Software
                 }
                 else
                 {
-                    Console.WriteLine("Didn't get an interrupt packet?????");
+                    logger.Info("Didn't get an interrupt packet?????");
                 }
 
             } while (!(exitToken.IsCancellationRequested));
