@@ -1,3 +1,21 @@
+-- Basic Documentation:
+--
+-- AddLuaChannel(c, function(e, b, t, a) ... end)
+--   Puts channel c in control of the Lua callback function. Arguments of the
+--   callback are:
+--   - e: Encoder count.
+--   - b: Button state -- incremented per push and release. So bit 0 is set
+--        if the button is currently depressed; bit 1 is set if the button
+--        has been pressed an odd number of times. The toggle() function is
+--        a utility for implementing a toggle functionality using the value
+--        of b.
+--   - t: Touch sensor output. 
+--   - a: Ambient light sensor output (logarithmic).
+--
+-- AddVolumeChannel(c, label, fn)
+--   Attaches channel c to the volume state of programs with fn in their
+--   filenames. Argument label determines the label on the LCD screen.
+
 function toggle(b, default)
 	return (math.floor((b+1)/2)+default+1) % 2 == 0
 end
@@ -12,12 +30,20 @@ function BlankLeds(backlight)
 end
 
 function AddTimeChannel(c)
-	return AddLuaChannel(c, function(e, b) return os.date("%H:%M"), BlankLeds(0) end)
+	return AddLuaChannel(c, function(e, b, t, a) return os.date("%H:%M"), BlankLeds(0) end)
+end
+
+function AddTouchChannel(c)
+	return AddLuaChannel(c, function(e, b, t, a) return ""..t, BlankLeds(128) end)
+end
+
+function AddAmbientChannel(c)
+	return AddLuaChannel(c, function(e, b, t, a) return ""..a, BlankLeds(128) end)
 end
 
 invocationCount = 0
 function AddInvocationCounterChannel(c)
-	return AddLuaChannel(c, function(e, b) invocationCount = invocationCount + 1 return ""..invocationCount, BlankLeds(128) end)
+	return AddLuaChannel(c, function(e, b, t, a) invocationCount = invocationCount + 1 return ""..invocationCount, BlankLeds(128) end)
 end
 
 -----------------------------------------------------------
@@ -30,7 +56,7 @@ AddVolumeChannel(2, "Chrome", "chrome.exe")
 
 encValue = 0
 
-function f(e, b)
+function f(e, b, t, a)
 	encValue = encValue + e
 
 	leds = BlankLeds(0)
@@ -43,6 +69,7 @@ function f(e, b)
 	return "Lua: " .. encValue, leds
 end
 
-AddTimeChannel(3)
+-- AddTimeChannel(3)
+AddTouchChannel(3)
 -- AddInvocationCounterChannel(3).SetPeriod(1000)
 -- AddLuaChannel(1, f)

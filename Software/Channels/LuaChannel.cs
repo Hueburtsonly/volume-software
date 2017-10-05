@@ -33,7 +33,7 @@ namespace Software.Channels
 
         String prevString = null;
 
-        public void HandleFrame(sbyte encoderDelta, byte buttonState, out byte[] ledState, out byte[] lcdImage)
+        public void HandleFrame(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading, out byte[] ledState, out byte[] lcdImage)
         {
             if (period != 0)
             {
@@ -52,7 +52,7 @@ namespace Software.Channels
                 nextMatchMs += period;
             }
 
-            DynValue ret = config.Function.Call(encoderDelta, buttonState);
+            DynValue ret = config.Function.Call(encoderDelta, buttonState, touchReading, ambientReading);
             Trace.Assert(ret.Type == DataType.Tuple);
             Trace.Assert(ret.Tuple[0].Type == DataType.String);
             String newString = ret.Tuple[0].String;

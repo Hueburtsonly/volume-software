@@ -74,11 +74,14 @@ namespace Software
 
                     string hex = BitConverter.ToString(readBuffer);
 
+                    ushort touchReading = (ushort)((ushort)readBuffer[2] | (ushort)(((ushort)readBuffer[3]) << 8));
+                    ushort ambientReading = (ushort)((ushort)readBuffer[4] | (ushort)(((ushort)readBuffer[5]) << 8));
+
                     for (int i = 0; i < ChannelCount; i++)
                     {
                         enc[i] += (sbyte)(readBuffer[6 + 2 * i]);
                         byte[] newLedState, newLcdImage;
-                        channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], out newLedState, out newLcdImage);
+                        channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
                         if (newLedState != null) wantedLedState[i] = newLedState;
                         if (newLcdImage != null) wantedLcdImage[i] = newLcdImage;
                     }
