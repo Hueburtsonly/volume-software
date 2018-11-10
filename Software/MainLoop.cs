@@ -13,7 +13,7 @@ namespace Software
 {
     class MainLoop
     {
-        private const byte ChannelCount = 4;
+        private const byte ChannelCount = 8;
 
         public static void Run(CancellationToken exitToken)
         {

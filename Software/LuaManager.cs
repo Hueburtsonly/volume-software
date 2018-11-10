@@ -19,8 +19,8 @@ namespace Software
 
         public static Channel[] StartLua()
         {
-            List<Channel> channels = new List<Channel>(4);
-            for (int i = 0; i < 4; i++)
+            List<Channel> channels = new List<Channel>(8);
+            for (int i = 0; i < 8; i++)
             {
                 channels.Add(new VolumeChannel("XXX", "XXX"));
             }

@@ -30,15 +30,15 @@ function BlankLeds(backlight)
 end
 
 function AddTimeChannel(c)
-	return AddLuaChannel(c, function(e, b, t, a) return os.date("%H:%M"), BlankLeds(0) end)
+	return AddLuaChannel(c, function(e, b, t, a) return os.date("%H:%M"), BlankLeds(toggle(b,1) and 128 or 0) end).SetPeriod(1000)
 end
 
 function AddTouchChannel(c)
-	return AddLuaChannel(c, function(e, b, t, a) return ""..t, BlankLeds(128) end)
+	return AddLuaChannel(c, function(e, b, t, a) return (toggle(b,0) and ""..t or ""), BlankLeds(toggle(b,0) and 128 or 0) end)
 end
 
 function AddAmbientChannel(c)
-	return AddLuaChannel(c, function(e, b, t, a) return ""..a, BlankLeds(128) end)
+	return AddLuaChannel(c, function(e, b, t, a) return (toggle(b,0) and ""..a or ""), BlankLeds(toggle(b,0) and 128 or 0) end)
 end
 
 invocationCount = 0
@@ -46,13 +46,53 @@ function AddInvocationCounterChannel(c)
 	return AddLuaChannel(c, function(e, b, t, a) invocationCount = invocationCount + 1 return ""..invocationCount, BlankLeds(128) end)
 end
 
+local timerend = -1
+function AddTimerChannel(c, duration)
+	return AddLuaChannel(c, function(e, b, t, a) 
+		if timerend == -1 then
+			if b % 2 == 1 then
+				timerend = os.time() + duration
+			end
+		end
+		if timerend == -2 then
+			if b % 2 == 0 then
+				timerend = -1
+			end
+		end
+		if timerend != -1 then
+			remaining = timerend - os.time()
+			if remaining < 0 then
+
+				if b % 2 == 1 then
+					timerend = -2
+					return "", BlankLeds(0)
+				end
+				if remaining < -300 then
+					timerend = -2
+					return "", BlankLeds(0)
+				end
+								
+				local ccc = {0, 0, 0}
+				local sel = math.floor(((os.time()*10) % 3) + 1)
+				ccc[sel] = 255
+
+
+				return "", {ccc[1], ccc[2], ccc[3], ccc[1], ccc[2], ccc[3], ccc[1], ccc[2], ccc[3], ccc[1], ccc[2], ccc[3], ccc[1], ccc[2], ccc[3], ccc[1], ccc[2], ccc[3], ccc[1], ccc[2], ccc[3]}
+			end
+			return ""..(math.ceil(remaining)), BlankLeds(128)
+		end
+		return "", BlankLeds(0)
+	end)
+end
+
 -----------------------------------------------------------
 -- Loosely speaking, stuff above this line should stay compiled into the application, whereas
 -- stuff below this line should be moved out into a user-accessible config file.
 
-AddVolumeChannel(0, "Teamspeak", "ts3client_win64.exe")
+
+AddVolumeChannel(0, "Chrome", "chrome.exe")
 AddVolumeChannel(1, "Rocket", "RocketLeague.exe")
-AddVolumeChannel(2, "Chrome", "chrome.exe")
+AddVolumeChannel(2, "Teamspeak", "ts3client_win64.exe")
 
 encValue = 0
 
@@ -69,7 +109,18 @@ function f(e, b, t, a)
 	return "Lua: " .. encValue, leds
 end
 
--- AddTimeChannel(3)
-AddTouchChannel(3)
+AddTimeChannel(7)
+-- 
 -- AddInvocationCounterChannel(3).SetPeriod(1000)
 -- AddLuaChannel(1, f)
+
+
+AddAmbientChannel(3)
+AddTouchChannel(4)
+-- AddLuaChannel(5, f)
+
+AddTimerChannel(6, 3*60)
+
+for i = 3,6 do
+	-- AddVolumeChannel(i, "Chrome", "chrome.exe")
+end

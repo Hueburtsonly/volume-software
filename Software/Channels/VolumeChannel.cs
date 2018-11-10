@@ -240,7 +240,7 @@ namespace Software.Channels
             //*
             for (int i = 0; i < 10; i++)
             {
-                ledState[10 + i] = (peak > ledThresholds[i] * recentMaximum) ? (byte)((i + 1) * 25) : (byte)0;
+                ledState[10 + i] = (peak > ledThresholds[i] * recentMaximum) ? (byte)((i + 1) * 10) : (byte)0;
                     
             }
             for (int i = 9; i >= 0; i--)
