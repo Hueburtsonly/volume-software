@@ -3,7 +3,6 @@ using LibUsbDotNet.Main;
 using Software.Channels;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Software.Logging;
@@ -13,19 +12,30 @@ namespace Software
     class MainLoop
     {
         private const byte ChannelCount = 4;
+        private static LoggingProvider _logger;
+        private static CancellationTokenSource _cancellationTokenSource;
 
-        public static void Run(CancellationToken exitToken, LoggingProvider logger)
+        public static void Run(CancellationTokenSource cancellationTokenSource, LoggingProvider logger)
         {
+            _cancellationTokenSource = cancellationTokenSource ?? throw new ArgumentNullException(nameof(cancellationTokenSource));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
             Channel[] channels = LuaManager.StartLua();
 
-            UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(0x6b56, 0x8802);
-            UsbDevice MyUsbDevice;
+            var vid = 0x6b56;
+            var pid = 0x8802;
+            _logger.Info($"Connecting to VID: {vid} PID: {pid}");
 
-
-            MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
+            UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(vid, pid);
+            var MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
 
             // If the device is open and ready
-            if (MyUsbDevice == null) throw new Exception("Device Not Found.");
+            if (MyUsbDevice == null)
+            {
+                _logger.Error("Device Not Found.");
+                ExitTray();
+                return;
+            }
 
             // If this is a "whole" usb device (libusb-win32, linux libusb)
             // it will have an IUsbDevice interface. If not (WinUSB) the 
@@ -66,15 +76,13 @@ namespace Software
                 ErrorCode ecRead = reader.Transfer(readBuffer, 0, readBuffer.Length, 100, out transferredIn);
                 if (ecRead != ErrorCode.None)
                 {
-                    logger.Error($"Submit Async Read Failed. ErrorCode: {ecRead}");
+                    _logger.Error($"Submit Async Read Failed. ErrorCode: {ecRead}");
                     return;
                 }
 
 
                 if (transferredIn > 0)
                 {
-
-                    string hex = BitConverter.ToString(readBuffer);
 
                     for (int i = 0; i < ChannelCount; i++)
                     {
@@ -84,8 +92,6 @@ namespace Software
                         if (newLedState != null) wantedLedState[i] = newLedState;
                         if (newLcdImage != null) wantedLcdImage[i] = newLcdImage;
                     }
-
-
 
                     {
                         IEnumerable<byte> buffer = new byte[0];
@@ -108,7 +114,6 @@ namespace Software
                             {
                                 buffer = buffer.Concat(buffer);
                             }
-                            Debug.Assert(buffer.Count() == 52);
 
                             byte[] bytesToSend = buffer.ToArray();
 
@@ -117,7 +122,7 @@ namespace Software
                             if (ecWrite != ErrorCode.None)
                             {
                                 // usbReadTransfer.Dispose();
-                                logger.Error($"Submit Async Write Failed on Writer4. ErrorCode: {ecWrite}");
+                                _logger.Error($"Submit Async Write Failed on Writer4. ErrorCode: {ecWrite}");
                                 return;
                             }
                         }
@@ -137,12 +142,12 @@ namespace Software
                                 if (ecLcdWrite != ErrorCode.None)
                                 {
                                     // usbReadTransfer.Dispose();
-                                    logger.Error($"Submit Async Write Failed on Writer3. ErrorCode: {ecLcdWrite}");
+                                    _logger.Error($"Submit Async Write Failed on Writer3. ErrorCode: {ecLcdWrite}");
                                     return;
                                 }
                                 else
                                 {
-                                    logger.Info($"Wrote to LCD {lcdCursor}");
+                                    _logger.Info($"Wrote to LCD {lcdCursor}");
                                 }
                                 break;
                             }
@@ -154,11 +159,16 @@ namespace Software
                 }
                 else
                 {
-                    logger.Info("Didn't get an interrupt packet?????");
+                    _logger.Warn("Didn't get an interrupt packet?????");
                 }
 
-            } while (!(exitToken.IsCancellationRequested));
+            } while (!(cancellationTokenSource.Token.IsCancellationRequested));
 
+        }
+
+        private static void ExitTray()
+        {
+            _cancellationTokenSource.Cancel();
         }
     }
 }

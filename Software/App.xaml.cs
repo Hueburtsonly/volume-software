@@ -22,14 +22,14 @@ namespace Software
             var logger = new SerilogLoggingProvider();
             logger.Info("Software of Greatness starting.");
 
-            var exitToken = new CancellationTokenSource();
+            var cancellationTokenSource = new CancellationTokenSource();
 
             var contextMenu = new ContextMenuStrip();
-            contextMenu.Items.Add("Exit", null, (s, e) => { exitToken.Cancel(); });
+            contextMenu.Items.Add("Exit", null, (s, e) => { cancellationTokenSource.Cancel(); });
             notifyIcon.ContextMenuStrip = contextMenu;
 
-            new Thread(() => MainLoop.Run(exitToken.Token,logger)).Start();
-            exitToken.Token.Register(() => { Application.Exit(); });
+            new Thread(() => MainLoop.Run(cancellationTokenSource, logger)).Start();
+            cancellationTokenSource.Token.Register(() => { Application.Exit(); });
 
             notifyIcon.Visible = true;
 

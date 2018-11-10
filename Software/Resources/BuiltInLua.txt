@@ -24,10 +24,11 @@ end
 -- Loosely speaking, stuff above this line should stay compiled into the application, whereas
 -- stuff below this line should be moved out into a user-accessible config file.
 
-AddVolumeChannel(0, "Teamspeak", "ts3client_win64.exe")
+AddVolumeChannel(0, "Teamspeak", "ts3client_win32.exe")
 AddVolumeChannel(1, "Rocket", "RocketLeague.exe")
 AddVolumeChannel(2, "Chrome", "chrome.exe")
 AddVolumeChannel(3, "Foobar", "foobar2000.exe")
+
 
 encValue = 0
 

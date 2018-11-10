@@ -37,26 +37,11 @@ namespace Software.Configuration
         /// <returns>The configuration value.</returns>
         public string GetConfigurationValue(string key, bool required = true)
         {
-            if (string.IsNullOrEmpty(key)) throw new ArgumentException("value cannot be null or empty", nameof(key));
-
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(key));
             string result = _appSettings[key];
-
             if (required && result == null) throw new ConfigurationErrorsException("The configuration key is missing: " + key);
 
             return result;
         }
     }
-
-    public class SoftwareConfiguration
-    {
-        private readonly IConfigurationProvider _configuration;
-
-        public SoftwareConfiguration(IConfigurationProvider configuration)
-        {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        }
-
-        //todo: config values
-    }
-    
 }

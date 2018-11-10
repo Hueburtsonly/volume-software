@@ -1,8 +1,8 @@
 ﻿using NAudio.CoreAudioApi;
 using NAudio.CoreAudioApi.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Management;
 
 namespace Software.Channels
 {
@@ -65,7 +65,7 @@ namespace Software.Channels
                     try
                     {
                         Process p = Process.GetProcessById((int)(session.GetProcessID));
-                        fn = ProcessExecutablePath(p);
+                        fn = p.ProcessName + ".exe";
                     }
                     catch (Exception e) { }
 
@@ -73,38 +73,10 @@ namespace Software.Channels
                     {
                         newSessionEvent(session, fn);
 
-
-
                         Console.WriteLine("\"" + fn + "\" " + session.GetProcessID + " -- " + session.AudioMeterInformation.MasterPeakValue + ((state == AudioSessionState.AudioSessionStateActive) ? " (ACTIVE)" : ""));
                     }
                 }
             }
-        }
-
-        static private string ProcessExecutablePath(Process process)
-        {
-            try
-            {
-                return process.MainModule.FileName;
-            }
-            catch
-            {
-                string query = "SELECT ExecutablePath, ProcessID FROM Win32_Process";
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
-
-                foreach (ManagementObject item in searcher.Get())
-                {
-                    object id = item["ProcessID"];
-                    object path = item["ExecutablePath"];
-
-                    if (path != null && id.ToString() == process.Id.ToString())
-                    {
-                        return path.ToString();
-                    }
-                }
-            }
-
-            return "oopsie";
         }
 
         // Whenever a new session is created, this event is fired for every non-expired session.
