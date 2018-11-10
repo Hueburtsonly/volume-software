@@ -20,7 +20,22 @@ namespace Software
             _cancellationTokenSource = cancellationTokenSource ?? throw new ArgumentNullException(nameof(cancellationTokenSource));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            Channel[] channels = LuaManager.StartLua();
+            try
+            {
+                TheActualLoop();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+                _logger.Info("Signalling tray to exit");
+                _cancellationTokenSource.Cancel();
+            }
+
+        }
+
+        private static void TheActualLoop()
+        {
+            Channel[] channels = LuaManager.StartLua(_logger);
 
             var vid = 0x6b56;
             var pid = 0x8802;
@@ -32,9 +47,7 @@ namespace Software
             // If the device is open and ready
             if (MyUsbDevice == null)
             {
-                _logger.Error("Device Not Found.");
-                ExitTray();
-                return;
+                throw new Exception("Device Not Found.");
             }
 
             // If this is a "whole" usb device (libusb-win32, linux libusb)
@@ -60,7 +73,7 @@ namespace Software
             UsbEndpointReader reader = MyUsbDevice.OpenEndpointReader(ReadEndpointID.Ep03);
 
             //Channel[] channels = { new VolumeChannel("Teamspeak", "ts3client_win64.exe"), new VolumeChannel("Rocket", "RocketLeague.exe"), new VolumeChannel("Chrome", "chrome.exe"), new VolumeChannel("XXX", "XXX") };
-            
+
             int[] enc = new int[ChannelCount];
             byte[][] wantedLedState = new byte[ChannelCount][]; // 21
             byte[][] wantedLcdImage = new byte[ChannelCount][]; // 512
@@ -76,10 +89,8 @@ namespace Software
                 ErrorCode ecRead = reader.Transfer(readBuffer, 0, readBuffer.Length, 100, out transferredIn);
                 if (ecRead != ErrorCode.None)
                 {
-                    _logger.Error($"Submit Async Read Failed. ErrorCode: {ecRead}");
-                    return;
+                    throw new Exception($"Submit Async Read Failed. ErrorCode: {ecRead}");
                 }
-
 
                 if (transferredIn > 0)
                 {
@@ -125,8 +136,7 @@ namespace Software
                             if (ecWrite != ErrorCode.None)
                             {
                                 // usbReadTransfer.Dispose();
-                                _logger.Error($"Submit Async Write Failed on Writer4. ErrorCode: {ecWrite}");
-                                return;
+                                throw new Exception($"Submit Async Write Failed on Writer4. ErrorCode: {ecWrite}");
                             }
                         }
                     }
@@ -145,8 +155,7 @@ namespace Software
                                 if (ecLcdWrite != ErrorCode.None)
                                 {
                                     // usbReadTransfer.Dispose();
-                                    _logger.Error($"Submit Async Write Failed on Writer3. ErrorCode: {ecLcdWrite}");
-                                    return;
+                                    throw new Exception($"Submit Async Write Failed on Writer3. ErrorCode: {ecLcdWrite}");
                                 }
                                 else
                                 {
@@ -158,20 +167,13 @@ namespace Software
                         }
                     }
 
-
                 }
                 else
                 {
                     _logger.Warn("Didn't get an interrupt packet?????");
                 }
 
-            } while (!(cancellationTokenSource.Token.IsCancellationRequested));
-
-        }
-
-        private static void ExitTray()
-        {
-            _cancellationTokenSource.Cancel();
+            } while (!_cancellationTokenSource.Token.IsCancellationRequested);
         }
     }
 }
