@@ -2,33 +2,25 @@
 using Software.Channels;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Software.Logging;
 
 namespace Software
 {
     class LuaManager
     {
-
-        private static int Mul(int a, int b, DynValue v)
+        public static Channel[] StartLua(LoggingProvider logger)
         {
-            return (int)v.Function.Call(a, b).Number;
-        }
+            if (logger == null) throw new ArgumentNullException(nameof(logger));
 
-
-        public static Channel[] StartLua()
-        {
             List<Channel> channels = new List<Channel>(8);
             for (int i = 0; i < 8; i++)
             {
-                channels.Add(new VolumeChannel("XXX", "XXX"));
+                channels.Add(new VolumeChannel("XXX", "XXX", logger));
             }
-
 
             Script script = new Script();
 
-            script.Globals["AddVolumeChannel"] = (Func<int, String, String, int>)((int c, String displayName, String exeSuffix) => { channels[c] = new VolumeChannel(displayName, exeSuffix); return 0; });
+            script.Globals["AddVolumeChannel"] = (Func<int, String, String, int>)((int c, String displayName, String exeSuffix) => { channels[c] = new VolumeChannel(displayName, exeSuffix, logger); return 0; });
             script.Globals["AddLuaChannel"] = (Func<int, DynValue, DynValue>)((int c, DynValue config) => { LuaChannel nc; DynValue dv = LuaChannel.ConstructForLua(script, config, out nc); channels[c] = nc; return dv; });
 
             script.DoString(Software.Properties.Resources.BuiltInLua);

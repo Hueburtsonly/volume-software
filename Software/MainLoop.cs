@@ -3,31 +3,52 @@ using LibUsbDotNet.Main;
 using Software.Channels;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using Software.Logging;
 
 namespace Software
 {
     class MainLoop
     {
         private const byte ChannelCount = 8;
+        private static LoggingProvider _logger;
+        private static CancellationTokenSource _cancellationTokenSource;
 
-        public static void Run(CancellationToken exitToken)
+        public static void Run(CancellationTokenSource cancellationTokenSource, LoggingProvider logger)
         {
+            _cancellationTokenSource = cancellationTokenSource ?? throw new ArgumentNullException(nameof(cancellationTokenSource));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            Channel[] channels = LuaManager.StartLua();
+            try
+            {
+                TheActualLoop();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+                _logger.Info("Signalling tray to exit");
+                _cancellationTokenSource.Cancel();
+            }
 
-            UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(0x6b56, 0x8802);
-            UsbDevice MyUsbDevice;
+        }
 
+        private static void TheActualLoop()
+        {
+            Channel[] channels = LuaManager.StartLua(_logger);
 
-            MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
+            var vid = 0x6b56;
+            var pid = 0x8802;
+            _logger.Info($"Connecting to VID: {vid} PID: {pid}");
+
+            UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(vid, pid);
+            var MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
 
             // If the device is open and ready
-            if (MyUsbDevice == null) throw new Exception("Device Not Found.");
+            if (MyUsbDevice == null)
+            {
+                throw new Exception("Device Not Found.");
+            }
 
             // If this is a "whole" usb device (libusb-win32, linux libusb)
             // it will have an IUsbDevice interface. If not (WinUSB) the 
@@ -52,7 +73,7 @@ namespace Software
             UsbEndpointReader reader = MyUsbDevice.OpenEndpointReader(ReadEndpointID.Ep03);
 
             //Channel[] channels = { new VolumeChannel("Teamspeak", "ts3client_win64.exe"), new VolumeChannel("Rocket", "RocketLeague.exe"), new VolumeChannel("Chrome", "chrome.exe"), new VolumeChannel("XXX", "XXX") };
-            
+
             int[] enc = new int[ChannelCount];
             byte[][] wantedLedState = new byte[ChannelCount][]; // 21
             byte[][] wantedLcdImage = new byte[ChannelCount][]; // 512
@@ -66,13 +87,13 @@ namespace Software
                 int transferredIn;
                 byte[] readBuffer = new byte[38];
                 ErrorCode ecRead = reader.Transfer(readBuffer, 0, readBuffer.Length, 100, out transferredIn);
-                if (ecRead != ErrorCode.None) throw new Exception("Submit Async Read Failed.");
-
+                if (ecRead != ErrorCode.None)
+                {
+                    throw new Exception($"Submit Async Read Failed. ErrorCode: {ecRead}");
+                }
 
                 if (transferredIn > 0)
                 {
-
-                    string hex = BitConverter.ToString(readBuffer);
 
                     ushort touchReading = (ushort)((ushort)readBuffer[2] | (ushort)(((ushort)readBuffer[3]) << 8));
                     ushort ambientReading = (ushort)((ushort)readBuffer[4] | (ushort)(((ushort)readBuffer[5]) << 8));
@@ -85,8 +106,6 @@ namespace Software
                         if (newLedState != null) wantedLedState[i] = newLedState;
                         if (newLcdImage != null) wantedLcdImage[i] = newLcdImage;
                     }
-
-
 
                     {
                         IEnumerable<byte> buffer = new byte[0];
@@ -109,7 +128,6 @@ namespace Software
                             {
                                 buffer = buffer.Concat(buffer);
                             }
-                            Debug.Assert(buffer.Count() == 52);
 
                             byte[] bytesToSend = buffer.ToArray();
 
@@ -118,7 +136,7 @@ namespace Software
                             if (ecWrite != ErrorCode.None)
                             {
                                 // usbReadTransfer.Dispose();
-                                throw new Exception("Submit Async Write Failed.");
+                                throw new Exception($"Submit Async Write Failed on Writer4. ErrorCode: {ecWrite}");
                             }
                         }
                     }
@@ -137,11 +155,11 @@ namespace Software
                                 if (ecLcdWrite != ErrorCode.None)
                                 {
                                     // usbReadTransfer.Dispose();
-                                    throw new Exception("Submit Async Write Failed.");
+                                    throw new Exception($"Submit Async Write Failed on Writer3. ErrorCode: {ecLcdWrite}");
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Wrote to LCD {0}", lcdCursor);
+                                    _logger.Info($"Wrote to LCD {lcdCursor}");
                                 }
                                 break;
                             }
@@ -149,15 +167,13 @@ namespace Software
                         }
                     }
 
-
                 }
                 else
                 {
-                    Console.WriteLine("Didn't get an interrupt packet?????");
+                    _logger.Warn("Didn't get an interrupt packet?????");
                 }
 
-            } while (!(exitToken.IsCancellationRequested));
-
+            } while (!_cancellationTokenSource.Token.IsCancellationRequested);
         }
     }
 }
