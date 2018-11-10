@@ -1,17 +1,14 @@
 ﻿using NAudio.CoreAudioApi;
 using NAudio.CoreAudioApi.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Management;
-using System.Text;
-using System.Threading.Tasks;
+using Software.Logging;
 
 namespace Software.Channels
 {
     class VolumeChannel : Channel
     {
+        private readonly LoggingProvider _logger;
         static MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
         static MMDevice device;
         static AudioSessionManager sessManager;
@@ -20,6 +17,7 @@ namespace Software.Channels
 
         static VolumeChannel()
         {
+            
             device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console);
 
             sessManager = device.AudioSessionManager;
@@ -43,14 +41,13 @@ namespace Software.Channels
             shouldRefreshSessions = true;
         }
 
-        public static void MaybeRefreshSessions()
+        public void MaybeRefreshSessions()
         {
             if (shouldRefreshSessions)
             {
                 shouldRefreshSessions = false;
                 sessManager.RefreshSessions();
 
-                Console.WriteLine("");
                 int count = sessManager.Sessions.Count;
 
                 for (int i = 0; i < count; i++)
@@ -68,47 +65,23 @@ namespace Software.Channels
 
                     try
                     {
-                        Process p = Process.GetProcessById((int)(session.GetProcessID));
-                        fn = ProcessExecutablePath(p);
+                        Process p = Process.GetProcessById((int) (session.GetProcessID));
+                        fn = p.ProcessName + ".exe";
                     }
-                    catch (Exception e) { }
+                    catch (Exception e)
+                    {
+                        _logger.Error($"Could not get process name. {e.Message}", e);
+                    }
 
                     if (state != AudioSessionState.AudioSessionStateExpired)
                     {
                         newSessionEvent(session, fn);
 
-
-
-                        Console.WriteLine("\"" + fn + "\" " + session.GetProcessID + " -- " + session.AudioMeterInformation.MasterPeakValue + ((state == AudioSessionState.AudioSessionStateActive) ? " (ACTIVE)" : ""));
+                        var stateStr = (state == AudioSessionState.AudioSessionStateActive) ? " (ACTIVE)" : "";
+                        _logger.Info($"'{fn}' {session.GetProcessID} -- {session.AudioMeterInformation.MasterPeakValue + stateStr}");
                     }
                 }
             }
-        }
-
-        static private string ProcessExecutablePath(Process process)
-        {
-            try
-            {
-                return process.MainModule.FileName;
-            }
-            catch
-            {
-                string query = "SELECT ExecutablePath, ProcessID FROM Win32_Process";
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
-
-                foreach (ManagementObject item in searcher.Get())
-                {
-                    object id = item["ProcessID"];
-                    object path = item["ExecutablePath"];
-
-                    if (path != null && id.ToString() == process.Id.ToString())
-                    {
-                        return path.ToString();
-                    }
-                }
-            }
-
-            return "oopsie";
         }
 
         // Whenever a new session is created, this event is fired for every non-expired session.
@@ -141,11 +114,12 @@ namespace Software.Channels
         private String displayName;
         private NewSessionHandler newSessionHandler;
 
-        public VolumeChannel(String displayName, String exeSuffix)
+        public VolumeChannel(String displayName, String exeSuffix, LoggingProvider logger)
         {
             this.displayName = displayName;
             this.exeSuffix = exeSuffix;
             newSessionEvent += newSessionHandler = new NewSessionHandler(HandleNewSession);
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         ~VolumeChannel()
