@@ -14,32 +14,45 @@ namespace Software
         private const byte ChannelCount = 8;
         private static LoggingProvider _logger;
         private static CancellationTokenSource _cancellationTokenSource;
+        private static Channel[] _channels;
+        private static byte[][] _wantedLedState = new byte[ChannelCount][]; // 21
+        private static byte[][] _wantedLcdImage = new byte[ChannelCount][]; // 512
 
         public static void Run(CancellationTokenSource cancellationTokenSource, LoggingProvider logger)
         {
             _cancellationTokenSource = cancellationTokenSource ?? throw new ArgumentNullException(nameof(cancellationTokenSource));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _channels = LuaManager.StartLua(_logger);
+            do
+            {
+                try
+                {
+                    App.notifyIcon.Text = "Trying to connect...";
+                    TheActualLoop();
+                }
+                catch (Exception e)
+                {
+                    _logger.Error(e);
+                    System.Threading.Thread.Sleep(1000);
+                    //_logger.Info("Signalling tray to exit");
+                    //_cancellationTokenSource.Cancel();
+                }
 
-            try
-            {
-                TheActualLoop();
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e);
-                _logger.Info("Signalling tray to exit");
-                _cancellationTokenSource.Cancel();
-            }
+            } while (!_cancellationTokenSource.Token.IsCancellationRequested);
 
         }
 
+        static Boolean _shouldLogConnection = true;
+
         private static void TheActualLoop()
         {
-            Channel[] channels = LuaManager.StartLua(_logger);
 
             var vid = 0x6b56;
             var pid = 0x8802;
-            _logger.Info($"Connecting to VID: {vid} PID: {pid}");
+            if (_shouldLogConnection)
+            {
+                _logger.Info($"Connecting to VID: {vid} PID: {pid}");
+            }
 
             UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(vid, pid);
             var MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
@@ -47,8 +60,18 @@ namespace Software
             // If the device is open and ready
             if (MyUsbDevice == null)
             {
-                throw new Exception("Device Not Found.");
+                if (_shouldLogConnection)
+                {
+                    _logger.Warn("Device Not Found.");
+                    _shouldLogConnection = false;
+                }
+                System.Threading.Thread.Sleep(1000);
+                return;
             }
+
+            _shouldLogConnection = true;
+            _logger.Info("Connected with great success.");
+            App.notifyIcon.Text = "Tray Icon of Greatness";
 
             // If this is a "whole" usb device (libusb-win32, linux libusb)
             // it will have an IUsbDevice interface. If not (WinUSB) the 
@@ -75,8 +98,6 @@ namespace Software
             //Channel[] channels = { new VolumeChannel("Teamspeak", "ts3client_win64.exe"), new VolumeChannel("Rocket", "RocketLeague.exe"), new VolumeChannel("Chrome", "chrome.exe"), new VolumeChannel("XXX", "XXX") };
 
             int[] enc = new int[ChannelCount];
-            byte[][] wantedLedState = new byte[ChannelCount][]; // 21
-            byte[][] wantedLcdImage = new byte[ChannelCount][]; // 512
             byte[][] actualLedState = new byte[ChannelCount][];
             byte[][] actualLcdImage = new byte[ChannelCount][];
             byte ledCursor = 0;
@@ -102,18 +123,18 @@ namespace Software
                     {
                         enc[i] += (sbyte)(readBuffer[6 + 2 * i]);
                         byte[] newLedState, newLcdImage;
-                        channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
-                        if (newLedState != null) wantedLedState[i] = newLedState;
-                        if (newLcdImage != null) wantedLcdImage[i] = newLcdImage;
+                        _channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
+                        if (newLedState != null) _wantedLedState[i] = newLedState;
+                        if (newLcdImage != null) _wantedLcdImage[i] = newLcdImage;
                     }
 
                     {
                         IEnumerable<byte> buffer = new byte[0];
                         for (int i = 0; i < ChannelCount && buffer.Count() < 52; i++)
                         {
-                            if (wantedLedState[ledCursor] != null && (actualLedState[ledCursor] == null || !wantedLedState[ledCursor].SequenceEqual(actualLedState[ledCursor])))
+                            if (_wantedLedState[ledCursor] != null && (actualLedState[ledCursor] == null || !_wantedLedState[ledCursor].SequenceEqual(actualLedState[ledCursor])))
                             {
-                                byte[] wanted = wantedLedState[ledCursor];
+                                byte[] wanted = _wantedLedState[ledCursor];
                                 buffer = buffer.Concat(new byte[] {
                                     ledCursor, 0,
                                     wanted[0], wanted[1], wanted[2], wanted[3], wanted[4], wanted[5], wanted[6], wanted[7], wanted[8], wanted[9], wanted[20], wanted[20],
@@ -143,9 +164,9 @@ namespace Software
                     {
                         for (int i = 0; i < ChannelCount; i++)
                         {
-                            if (wantedLcdImage[lcdCursor] != null && (actualLcdImage[lcdCursor] == null || !wantedLcdImage[lcdCursor].SequenceEqual(actualLcdImage[lcdCursor])))
+                            if (_wantedLcdImage[lcdCursor] != null && (actualLcdImage[lcdCursor] == null || !_wantedLcdImage[lcdCursor].SequenceEqual(actualLcdImage[lcdCursor])))
                             {
-                                byte[] bytesToSend = wantedLcdImage[lcdCursor];
+                                byte[] bytesToSend = _wantedLcdImage[lcdCursor];
                                 actualLcdImage[lcdCursor] = bytesToSend;
 
                                 bytesToSend = new byte[] { 4, 2, lcdCursor, 0 }.Concat(bytesToSend).ToArray();
