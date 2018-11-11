@@ -17,6 +17,7 @@ namespace Software
         private static Channel[] _channels;
         private static byte[][] _wantedLedState = new byte[ChannelCount][]; // 21
         private static byte[][] _wantedLcdImage = new byte[ChannelCount][]; // 512
+        private static Boolean _shouldLogConnection = true;
 
         public static void Run(CancellationTokenSource cancellationTokenSource, LoggingProvider logger)
         {
@@ -42,8 +43,6 @@ namespace Software
             } while (!_cancellationTokenSource.Token.IsCancellationRequested);
 
         }
-
-        static Boolean _shouldLogConnection = true;
 
         private static void TheActualLoop()
         {
