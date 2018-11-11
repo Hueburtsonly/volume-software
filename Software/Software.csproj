@@ -172,6 +172,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\DefaultConfigLua.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Resources\SearchingIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

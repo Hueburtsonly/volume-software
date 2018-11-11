@@ -3,14 +3,18 @@ using Software.Channels;
 using System;
 using System.Collections.Generic;
 using Software.Logging;
+using System.IO;
+using System.Windows.Forms;
+using Software.Configuration;
 
 namespace Software
 {
     class LuaManager
     {
-        public static Channel[] StartLua(LoggingProvider logger)
+        public static Channel[] StartLua(LoggingProvider logger, SoftwareConfiguration configuration)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
             List<Channel> channels = new List<Channel>(8);
             for (int i = 0; i < 8; i++)
@@ -25,6 +29,20 @@ namespace Software
 
             script.DoString(Software.Properties.Resources.BuiltInLua);
 
+            if (!File.Exists(configuration.ConfigFilePath))
+            {
+                File.WriteAllText(configuration.ConfigFilePath, Software.Properties.Resources.DefaultConfigLua);
+            }
+
+            try
+            {
+                script.DoFile(configuration.ConfigFilePath);
+            }
+            catch (ScriptRuntimeException e)
+            {
+                MessageBox.Show(e.DecoratedMessage, "Error parsing config.lua", MessageBoxButtons.OK);
+                throw e;
+            }
 
             //DynValue res = script.Call(script.Globals["fact"], 4);
 
