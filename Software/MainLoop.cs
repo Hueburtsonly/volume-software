@@ -23,8 +23,18 @@ namespace Software
         {
             _cancellationTokenSource = cancellationTokenSource ?? throw new ArgumentNullException(nameof(cancellationTokenSource));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _channels = LuaManager.StartLua(_logger);
-            do
+
+            try
+            {
+                _channels = LuaManager.StartLua(_logger);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e);
+                _cancellationTokenSource.Cancel();
+            }
+
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 try
                 {
@@ -40,7 +50,7 @@ namespace Software
                     //_cancellationTokenSource.Cancel();
                 }
 
-            } while (!_cancellationTokenSource.Token.IsCancellationRequested);
+            };
 
         }
 

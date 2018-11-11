@@ -22,4 +22,4 @@ using System.Windows;
                                               // app, or any theme specific resource dictionaries)
 )]
 
-[assembly: AssemblyInformationalVersion("1.0.0-alpha")]
+[assembly: AssemblyInformationalVersion("1.0.1")]
