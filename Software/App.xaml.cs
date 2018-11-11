@@ -11,13 +11,13 @@ namespace Software
     /// </summary>
     public partial class App
     {
-        static NotifyIcon notifyIcon = new NotifyIcon();
+        public static NotifyIcon notifyIcon = new NotifyIcon();
 
         [STAThread]
         static void Main(string[] args)
         {
-            notifyIcon.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-            notifyIcon.Text = "Tray Icon of Greatness";
+            notifyIcon.Icon = Software.Properties.Resources.SearchingIcon;
+            notifyIcon.Text = "Loading...";
 
             var logger = new SerilogLoggingProvider();
             logger.Info("Software of Greatness starting.");

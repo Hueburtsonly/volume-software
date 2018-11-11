@@ -19,7 +19,7 @@ namespace Software.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,26 +61,17 @@ namespace Software.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to function toggle(b, default)
-        ///	return (math.floor((b+1)/2)+default+1) % 2 == 0
-        ///end
-        ///
-        ///function BlankLeds(backlight) 
-        ///	leds = {}
-        ///	for i = 1,20 do
-        ///		leds[i] = 0
-        ///	end
-        ///	leds[21] = backlight
-        ///	return leds
-        ///end
-        ///
-        ///function AddTimeChannel(c)
-        ///	return AddLuaChannel(c, function(e, b) return os.date(&quot;%H:%M&quot;), BlankLeds(0) end)
-        ///end
-        ///
-        ///invocationCount = 0
-        ///function AddInvocationCounterChannel(c)
-        ///	return AddLuaChannel(c, function(e, b) invocationCount = invocationCount + 1 return &quot;&quot;..invocationCount, BlankLeds(12 [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to -- Basic Documentation:
+        ///--
+        ///-- AddLuaChannel(c, function(e, b, t, a) ... end)
+        ///--   Puts channel c in control of the Lua callback function. Arguments of the
+        ///--   callback are:
+        ///--   - e: Encoder count.
+        ///--   - b: Button state -- incremented per push and release. So bit 0 is set
+        ///--        if the button is currently depressed; bit 1 is set if the button
+        ///--        has been pressed an odd number of times. The toggle() function is
+        ///--        a utility for implementing a toggle functionality using the value
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string BuiltInLua {
             get {
@@ -94,6 +85,16 @@ namespace Software.Properties {
         internal static System.Drawing.Icon MainIcon {
             get {
                 object obj = ResourceManager.GetObject("MainIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon SearchingIcon {
+            get {
+                object obj = ResourceManager.GetObject("SearchingIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
