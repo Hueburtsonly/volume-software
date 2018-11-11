@@ -5,16 +5,16 @@ using System.Collections.Generic;
 using Software.Logging;
 using System.IO;
 using System.Windows.Forms;
+using Software.Configuration;
 
 namespace Software
 {
     class LuaManager
     {
-        private const String CONFIG_FN = "config.lua";
-
-        public static Channel[] StartLua(LoggingProvider logger)
+        public static Channel[] StartLua(LoggingProvider logger, SoftwareConfiguration configuration)
         {
             if (logger == null) throw new ArgumentNullException(nameof(logger));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
             List<Channel> channels = new List<Channel>(8);
             for (int i = 0; i < 8; i++)
@@ -29,14 +29,14 @@ namespace Software
 
             script.DoString(Software.Properties.Resources.BuiltInLua);
 
-            if (!File.Exists(CONFIG_FN))
+            if (!File.Exists(configuration.ConfigFilePath))
             {
-                File.WriteAllText(CONFIG_FN, Software.Properties.Resources.DefaultConfigLua);
+                File.WriteAllText(configuration.ConfigFilePath, Software.Properties.Resources.DefaultConfigLua);
             }
 
             try
             {
-                script.DoFile(CONFIG_FN);
+                script.DoFile(configuration.ConfigFilePath);
             }
             catch (ScriptRuntimeException e)
             {

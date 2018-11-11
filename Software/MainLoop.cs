@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Software.Configuration;
 using Software.Logging;
 
 namespace Software
@@ -23,10 +24,11 @@ namespace Software
         {
             _cancellationTokenSource = cancellationTokenSource ?? throw new ArgumentNullException(nameof(cancellationTokenSource));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            var config = new SoftwareConfiguration(new AppConfigurationValueProvider());
 
             try
             {
-                _channels = LuaManager.StartLua(_logger);
+                _channels = LuaManager.StartLua(_logger,config);
             }
             catch (Exception e)
             {
@@ -46,12 +48,8 @@ namespace Software
                 {
                     _logger.Error(e);
                     System.Threading.Thread.Sleep(1000);
-                    //_logger.Info("Signalling tray to exit");
-                    //_cancellationTokenSource.Cancel();
                 }
-
-            };
-
+            }
         }
 
         private static void TheActualLoop()

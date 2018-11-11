@@ -11,7 +11,7 @@ namespace Software.Configuration
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        //todo: config values
+        public string ConfigFilePath => _configuration.GetConfigurationValue("LuaConfigFilePath");
 
     }
 }
