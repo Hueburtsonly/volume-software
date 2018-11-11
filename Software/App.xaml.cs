@@ -16,7 +16,7 @@ namespace Software
         [STAThread]
         static void Main(string[] args)
         {
-            notifyIcon.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            notifyIcon.Icon = Software.Properties.Resources.SearchingIcon;
             notifyIcon.Text = "Loading...";
 
             var logger = new SerilogLoggingProvider();

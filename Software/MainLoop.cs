@@ -28,6 +28,7 @@ namespace Software
                 try
                 {
                     App.notifyIcon.Text = "Trying to connect...";
+                    App.notifyIcon.Icon = Software.Properties.Resources.SearchingIcon;
                     TheActualLoop();
                 }
                 catch (Exception e)
@@ -72,6 +73,7 @@ namespace Software
             _shouldLogConnection = true;
             _logger.Info("Connected with great success.");
             App.notifyIcon.Text = "Tray Icon of Greatness";
+            App.notifyIcon.Icon = Software.Properties.Resources.MainIcon;
 
             // If this is a "whole" usb device (libusb-win32, linux libusb)
             // it will have an IUsbDevice interface. If not (WinUSB) the 
