@@ -7,6 +7,9 @@ using System.Linq;
 using System.Threading;
 using Software.Configuration;
 using Software.Logging;
+using Microsoft.ClearScript.V8;
+using Microsoft.ClearScript;
+using System.Windows.Forms;
 
 namespace Software
 {
@@ -28,7 +31,7 @@ namespace Software
 
             try
             {
-                _channels = LuaManager.StartLua(_logger,config);
+                _channels = ScriptManager.StartScript(_logger, config);
             }
             catch (Exception e)
             {

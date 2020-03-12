@@ -1,33 +1,40 @@
 ﻿using System;
 using MoonSharp.Interpreter;
 using System.Diagnostics;
+using System.Dynamic;
+using System.Linq.Expressions;
+using Microsoft.ClearScript;
 
 namespace Software.Channels
 {
-    class LuaChannel : Channel
+    class ScriptChannel : Channel
     {
-        private DynValue config;
-        double period = 0;
+        private ScriptChannelCallback config;
+        double period = 100;
         private Stopwatch stopwatch = null;
         private double nextMatchMs = 0;
 
-        public LuaChannel(DynValue config)
+        public ScriptChannel(ScriptChannelCallback config)
         {
-            Trace.Assert(config.Type == DataType.Function);
+            //Trace.Assert(config.Type == DataType.Function);
             this.config = config;
         }
 
-        public static DynValue ConstructForLua(Script script, DynValue config, out LuaChannel channel)
+        public static ScriptChannel ConstructForScript(ScriptChannelCallback config, out ScriptChannel channel)
         {
-            LuaChannel nc = new LuaChannel(config);
+            ScriptChannel nc = new ScriptChannel(config);
             channel = nc;
-            DynValue ret = DynValue.NewTable(script);
-            ret.Table["SetPeriod"] =
-                (Func<double, DynValue>)((double newPeriod) => { nc.period = newPeriod; return ret; });
-            return ret;
+            return nc;
         }
 
         String prevString = null;
+
+        public ScriptChannel SetPeriod(double newPeriod)
+        {
+            // TODO: Make this accessible from the Script.
+            this.period = newPeriod;
+            return this;
+        }
 
         public void HandleFrame(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading, out byte[] ledState, out byte[] lcdImage)
         {
@@ -48,10 +55,17 @@ namespace Software.Channels
                 nextMatchMs += period;
             }
 
-            DynValue ret = config.Function.Call(encoderDelta, buttonState, touchReading, ambientReading);
-            Trace.Assert(ret.Type == DataType.Tuple);
-            Trace.Assert(ret.Tuple[0].Type == DataType.String);
-            String newString = ret.Tuple[0].String;
+            dynamic dynReturnedObject = config(encoderDelta, buttonState, touchReading, ambientReading);
+
+
+            System.Dynamic.DynamicObject ret = (System.Dynamic.DynamicObject)(config(encoderDelta, buttonState, touchReading, ambientReading));
+            //Trace.Assert(ret.Type == DataType.Tuple);
+            //Trace.Assert(ret.Tuple[0].Type == DataType.String);
+            String newString = dynReturnedObject.text; // (String)(ret.GetProperty("text")); // ret.Tuple[0].String;
+
+            dynamic dynleds = dynReturnedObject.leds;
+
+          
 
             if (prevString != newString)
             {
@@ -63,11 +77,11 @@ namespace Software.Channels
                 lcdImage = null;
             }
 
-            Trace.Assert(ret.Tuple[1].Type == DataType.Table);
+            //Trace.Assert(ret.Tuple[1].Type == DataType.Table);
             ledState = new byte[21];
             for (int i = 0; i < 21; i++)
             {
-                ledState[i] = (byte)(ret.Tuple[1].Table.Get(i+1).Number);
+                ledState[i] = (byte)(dynleds[i]);
             }
 
             ; ; ;

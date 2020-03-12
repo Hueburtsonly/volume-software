@@ -19,7 +19,7 @@ namespace Software.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,47 +61,51 @@ namespace Software.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to -- Built-in Lua config. Provides a richer group of pre-defined channel types on 
-        ///-- top of those provided by the C# code. See DefaultConfigLua.txt for more
-        ///-- documentation.
+        ///   Looks up a localized string similar to // Built-in Script config. Provides a richer group of pre-defined channel types on 
+        ///// top of those provided by the C# code. See DefaultConfigScript.txt for more
+        ///// documentation.
         ///
-        ///function toggle(b, default)
-        ///	return (math.floor((b+1)/2)+default+1) % 2 == 0
-        ///end
+        ///function toggle(b, defaultt) {
+        ///	return (Math.floor((b+1)/2)+defaultt+1) % 2 == 0;
+        ///}
         ///
-        ///function BlankLeds(backlight) 
-        ///	leds = {}
-        ///	for i = 1,20 do
-        ///		leds[i] = 0
-        ///	end
-        ///	leds[21] = backlight
-        ///	return leds
-        ///end
+        ///function ostime() {
+        ///	return (new Date()).getTime() / 1000;
+        ///}
         ///
-        ///function AddTimeChannel(c)
-        ///	return AddLuaChannel(c, function(e, b, t, a) return os.date(&quot;%H:%M&quot;), BlankLeds(toggle(b,1) [rest of string was truncated]&quot;;.
+        ///function BlankLeds(backlight) {
+        ///	leds = [];
+        ///	for (var i = 0; i &lt; 20; i++) {
+        ///		leds.push(0);
+        ///	}
+        ///	leds.push(backlight);
+        ///	return leds;
+        ///}
+        ///
+        ///function AddScriptChannel2(c [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string BuiltInLua {
+        internal static string BuiltInScript {
             get {
-                return ResourceManager.GetString("BuiltInLua", resourceCulture);
+                return ResourceManager.GetString("BuiltInScript", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to -- Basic Documentation:
-        ///--  
-        ///--   AddLuaChannel(c, function(e, b, t, a) ... end)
-        ///--     Puts channel c in control of the Lua callback function. Arguments of the
-        ///--     callback are:
-        ///--     - e: Encoder count.
-        ///--     - b: Button state -- incremented per push and release. So bit 0 is set
-        ///--          if the button is currently depressed; bit 1 is set if the button
-        ///--          has been pressed an odd number of times. The toggle() function is
-        ///--          a utility for implementing a toggle functionality [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to // Basic Documentation:
+        /////  
+        /////   AddScriptChannel(c, function(e, b, t, a) ... end)
+        /////     Puts channel c in control of the provided callback function. Arguments
+        /////     of the callback are:
+        /////     - ch: A channel display object that allows the callback to display 
+        /////           things on the LCD or LED.
+        /////     - e: Encoder count.
+        /////     - b: Button state -- incremented per push and release. So bit 0 is set
+        /////          if the button is currently depressed; bit 1 is set if the button
+        /////          has  [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string DefaultConfigLua {
+        internal static string DefaultConfigScript {
             get {
-                return ResourceManager.GetString("DefaultConfigLua", resourceCulture);
+                return ResourceManager.GetString("DefaultConfigScript", resourceCulture);
             }
         }
         

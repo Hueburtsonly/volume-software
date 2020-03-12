@@ -52,6 +52,9 @@
     <ApplicationIcon>Resources\MainIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ClearScript, Version=5.5.2.0, Culture=neutral, PublicKeyToken=935d0c957da47c73, processorArchitecture=MSIL">
+      <HintPath>..\packages\ClearScript.V8.5.5.2\lib\net45\ClearScript.dll</HintPath>
+    </Reference>
     <Reference Include="LibUsbDotNet.LibUsbDotNet, Version=2.2.0.0, Culture=neutral, PublicKeyToken=c677239abe1e02a9, processorArchitecture=MSIL">
       <HintPath>..\packages\LibUsbDotNet.2.2.29\lib\net45\LibUsbDotNet.LibUsbDotNet.dll</HintPath>
     </Reference>
@@ -108,7 +111,7 @@
     </Compile>
     <Compile Include="Channels\Channel.cs" />
     <Compile Include="Channels\ImageUtil.cs" />
-    <Compile Include="Channels\LuaChannel.cs" />
+    <Compile Include="Channels\ScriptChannel.cs" />
     <Compile Include="Channels\VolumeChannel.cs" />
     <Compile Include="Configuration\AppConfigurationValueProvider.cs" />
     <Compile Include="Configuration\IConfigurationProvider.cs" />
@@ -116,7 +119,7 @@
     <Compile Include="Logging\LoggingProvider.cs" />
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Logging\SerilogLoggingProvider.cs" />
-    <Compile Include="LuaManager.cs" />
+    <Compile Include="ScriptManager.cs" />
     <Compile Include="MainLoop.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -140,6 +143,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="packages.config">
       <SubType>Designer</SubType>
@@ -155,7 +159,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\BuiltInLua.txt" />
+    <Content Include="Resources\BuiltInScript.js" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\MainIcon.ico" />
@@ -173,10 +177,23 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\DefaultConfigLua.txt" />
+    <Content Include="Resources\DefaultConfigScript.js" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\SearchingIcon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Licenses\v8-license.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Licenses\clearscript-license.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+if not exist "$(TargetDir)" md "$(TargetDir)"
+xcopy /s /y "$(SolutionDir)packages\ClearScript.V8.5.5.2\tools\native\x86\*.*" "$(TargetDir)"
+if not exist "$(TargetDir)" md "$(TargetDir)"
+xcopy /s /y "$(SolutionDir)packages\ClearScript.V8.5.5.2\tools\native\amd64\*.*" "$(TargetDir)"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
