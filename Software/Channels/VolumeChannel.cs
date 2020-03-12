@@ -129,7 +129,7 @@ namespace Software.Channels
 
         private void HandleNewSession(AudioSessionControl newSession, String filename)
         {
-            if (filename.EndsWith(exeSuffix))
+            if (filename.EndsWith(exeSuffix) && (session == null || newSession.AudioMeterInformation.MasterPeakValue >= session.AudioMeterInformation.MasterPeakValue))
             {
                 session = newSession;
             }
