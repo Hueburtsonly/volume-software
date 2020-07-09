@@ -2,6 +2,7 @@
 using NAudio.CoreAudioApi.Interfaces;
 using System;
 using System.Diagnostics;
+using System.IO;
 using Software.Logging;
 
 namespace Software.Channels
@@ -129,7 +130,7 @@ namespace Software.Channels
 
         private void HandleNewSession(AudioSessionControl newSession, String filename)
         {
-            if (filename.EndsWith(exeSuffix) && (session == null || newSession.AudioMeterInformation.MasterPeakValue >= session.AudioMeterInformation.MasterPeakValue))
+            if (filename.EndsWith(exeSuffix,StringComparison.OrdinalIgnoreCase) && (session == null || newSession.AudioMeterInformation.MasterPeakValue >= session.AudioMeterInformation.MasterPeakValue))
             {
                 session = newSession;
             }
