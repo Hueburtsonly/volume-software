@@ -159,6 +159,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\7seg.png" />
     <Content Include="Resources\BuiltInScript.js" />
   </ItemGroup>
   <ItemGroup>

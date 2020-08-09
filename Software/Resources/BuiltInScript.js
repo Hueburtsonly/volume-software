@@ -27,12 +27,15 @@ function AddTimeChannel(c) {
     return AddScriptChannel(c, function(e, b, t, a) {
       var d = new Date();
       var hr = d.getHours();
+	  if (hr < 10) {
+		hr = ' ' + hr;
+	  }
       var min = d.getMinutes();
       if (min < 10) {
         min = '0' + min;
       }
 
-      return {text: hr + ':' + min, leds: BlankLeds(toggle(b, 1) ? 128 : 0)};
+      return {text: '`' + '````````````````````' + hr + ':' + min + '`````````````````````', leds: BlankLeds(toggle(b, 1) ? 128 : 0)};
     })/*.SetPeriod(1029)*/;
 }
 

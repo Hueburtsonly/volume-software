@@ -199,7 +199,7 @@ namespace Software.Channels
             int newIsActive = isActive ? 1 : 0;
             if (prevIsActive != newIsActive)
             {
-                lcdImage = ImageUtil.GenImageStream(isActive ? displayName : "");
+                lcdImage = ImageUtil.RenderPlainText(isActive ? displayName : "");
                 prevIsActive = newIsActive;
             } else
             {

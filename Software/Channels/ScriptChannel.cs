@@ -69,7 +69,7 @@ namespace Software.Channels
 
             if (prevString != newString)
             {
-                lcdImage = ImageUtil.GenImageStream(newString);
+                lcdImage = ImageUtil.RenderPlainText(newString);
                 prevString = newString;
             }
             else

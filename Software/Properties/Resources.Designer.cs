@@ -82,7 +82,7 @@ namespace Software.Properties {
         ///	return leds;
         ///}
         ///
-        ///function AddScriptChannel2(c [rest of string was truncated]&quot;;.
+        ///function AddScriptChannel(c, [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string BuiltInScript {
             get {
@@ -106,6 +106,16 @@ namespace Software.Properties {
         internal static string DefaultConfigScript {
             get {
                 return ResourceManager.GetString("DefaultConfigScript", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Font7Seg {
+            get {
+                object obj = ResourceManager.GetObject("Font7Seg", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
