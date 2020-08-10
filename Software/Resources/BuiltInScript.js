@@ -35,7 +35,7 @@ function AddTimeChannel(c) {
         min = '0' + min;
       }
 
-      return {text: '`' + '````````````````````' + hr + ':' + min + '`````````````````````', leds: BlankLeds(toggle(b, 1) ? 128 : 0)};
+      return {text: '`' + '```````````````````' + hr + '`:`' + min + '````````````````````', leds: BlankLeds(toggle(b, 1) ? 128 : 0)};
     })/*.SetPeriod(1029)*/;
 }
 
