@@ -12,7 +12,7 @@ using Microsoft.ClearScript;
 namespace Software
 {
 
-    public delegate Object ScriptChannelCallback(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading);
+    public delegate Object ScriptChannelCallback(Int16 encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading);
 
     class ScriptManager
     {

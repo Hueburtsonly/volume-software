@@ -36,8 +36,11 @@ namespace Software.Channels
             return this;
         }
 
+        Int16 accumEncoderDelta = 0;
+
         public void HandleFrame(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading, out byte[] ledState, out byte[] lcdImage)
         {
+            accumEncoderDelta += encoderDelta;
             if (period != 0)
             {
                 if (stopwatch == null)
@@ -55,12 +58,9 @@ namespace Software.Channels
                 nextMatchMs += period;
             }
 
-            dynamic dynReturnedObject = config(encoderDelta, buttonState, touchReading, ambientReading);
+            dynamic dynReturnedObject = config(accumEncoderDelta, buttonState, touchReading, ambientReading);
+            accumEncoderDelta = 0;
 
-
-            System.Dynamic.DynamicObject ret = (System.Dynamic.DynamicObject)(config(encoderDelta, buttonState, touchReading, ambientReading));
-            //Trace.Assert(ret.Type == DataType.Tuple);
-            //Trace.Assert(ret.Tuple[0].Type == DataType.String);
             String newString = dynReturnedObject.text; // (String)(ret.GetProperty("text")); // ret.Tuple[0].String;
 
             dynamic dynleds = dynReturnedObject.leds;
