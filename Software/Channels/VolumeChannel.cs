@@ -10,21 +10,21 @@ namespace Software.Channels
     class VolumeChannel : Channel
     {
         private readonly LoggingProvider _logger;
-        static MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
-        static MMDevice device;
-        static AudioSessionManager sessManager;
+        static MMDeviceEnumerator _enumerator = new MMDeviceEnumerator();
+        static MMDevice _device;
+        static AudioSessionManager _sessManager;
 
-        static bool shouldRefreshSessions = true;
+        static bool _shouldRefreshSessions = true;
 
         static VolumeChannel()
         {
             
-            device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console);
+            _device = _enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console);
 
-            sessManager = device.AudioSessionManager;
+            _sessManager = _device.AudioSessionManager;
 
             //sessManager.AudioSessionControl.RegisterEventClient(this);
-            sessManager.OnSessionCreated += new AudioSessionManager.SessionCreatedDelegate(OnSessionCreated);
+            _sessManager.OnSessionCreated += new AudioSessionManager.SessionCreatedDelegate(OnSessionCreated);
 
             for (int i = 0; i < 10; i++)
             {
@@ -39,21 +39,21 @@ namespace Software.Channels
 
         public static void OnSessionCreated(object sender, IAudioSessionControl newSession)
         {
-            shouldRefreshSessions = true;
+            _shouldRefreshSessions = true;
         }
 
         public void MaybeRefreshSessions()
         {
-            if (shouldRefreshSessions)
+            if (_shouldRefreshSessions)
             {
-                shouldRefreshSessions = false;
-                sessManager.RefreshSessions();
+                _shouldRefreshSessions = false;
+                _sessManager.RefreshSessions();
 
-                int count = sessManager.Sessions.Count;
+                int count = _sessManager.Sessions.Count;
 
                 for (int i = 0; i < count; i++)
                 {
-                    AudioSessionControl session = sessManager.Sessions[i];
+                    AudioSessionControl session = _sessManager.Sessions[i];
 
                     if (session.GetProcessID == 0)
                     {
@@ -121,6 +121,7 @@ namespace Software.Channels
             this.exeSuffix = exeSuffix;
             newSessionEvent += newSessionHandler = new NewSessionHandler(HandleNewSession);
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _shouldRefreshSessions = true;
         }
 
         ~VolumeChannel()

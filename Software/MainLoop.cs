@@ -22,6 +22,7 @@ namespace Software
         private static byte[][] _wantedLedState = new byte[ChannelCount][]; // 21
         private static byte[][] _wantedLcdImage = new byte[ChannelCount][]; // 512
         private static Boolean _shouldLogConnection = true;
+        public static bool _shouldReloadConfig = true;
 
         public static void Run(CancellationTokenSource cancellationTokenSource, LoggingProvider logger)
         {
@@ -29,28 +30,36 @@ namespace Software
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             var config = new SoftwareConfiguration(new AppConfigurationValueProvider());
 
-            try
+            while (_shouldReloadConfig)
             {
-                _channels = ScriptManager.StartScript(_logger, config);
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e);
-                _cancellationTokenSource.Cancel();
-            }
-
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
-            {
+                _shouldReloadConfig = false;
                 try
                 {
-                    App.notifyIcon.Text = "Trying to connect...";
-                    App.notifyIcon.Icon = Software.Properties.Resources.SearchingIcon;
-                    TheActualLoop();
+                    _channels = ScriptManager.StartScript(_logger, config);
                 }
                 catch (Exception e)
                 {
                     _logger.Error(e);
-                    System.Threading.Thread.Sleep(1000);
+                    _cancellationTokenSource.Cancel();
+                }
+
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        App.notifyIcon.Text = "Trying to connect...";
+                        App.notifyIcon.Icon = Software.Properties.Resources.SearchingIcon;
+                        TheActualLoop();
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.Error(e);
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                    if (_shouldReloadConfig)
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -67,7 +76,7 @@ namespace Software
 
             UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(vid, pid);
             var MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
-
+            
             // If the device is open and ready
             if (MyUsbDevice == null)
             {
@@ -208,8 +217,9 @@ namespace Software
                 }
 
                 firstLoop = false;
+            } while (!_cancellationTokenSource.Token.IsCancellationRequested && !_shouldReloadConfig);
 
-            } while (!_cancellationTokenSource.Token.IsCancellationRequested);
+            MyUsbDevice.Close();
         }
     }
 }

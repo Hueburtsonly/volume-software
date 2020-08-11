@@ -25,7 +25,8 @@ namespace Software
             var cancellationTokenSource = new CancellationTokenSource();
 
             var contextMenu = new ContextMenuStrip();
-            contextMenu.Items.Add("Exit", null, (s, e) => { cancellationTokenSource.Cancel(); });
+            contextMenu.Items.Add("&Reload config", null, (s, e) => { MainLoop._shouldReloadConfig = true; });
+            contextMenu.Items.Add("E&xit", null, (s, e) => { cancellationTokenSource.Cancel(); });
             notifyIcon.ContextMenuStrip = contextMenu;
 
             new Thread(() => MainLoop.Run(cancellationTokenSource, logger)).Start();
