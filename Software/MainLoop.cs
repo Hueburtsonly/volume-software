@@ -107,19 +107,19 @@ namespace Software
             UsbEndpointWriter Writer4 = MyUsbDevice.OpenEndpointWriter(WriteEndpointID.Ep04);
             UsbEndpointReader reader = MyUsbDevice.OpenEndpointReader(ReadEndpointID.Ep03);
 
-            //Channel[] channels = { new VolumeChannel("Teamspeak", "ts3client_win64.exe"), new VolumeChannel("Rocket", "RocketLeague.exe"), new VolumeChannel("Chrome", "chrome.exe"), new VolumeChannel("XXX", "XXX") };
-
-            int[] enc = new int[ChannelCount];
+            sbyte[] enc = new sbyte[ChannelCount];
             byte[][] actualLedState = new byte[ChannelCount][];
             byte[][] actualLcdImage = new byte[ChannelCount][];
             byte ledCursor = 0;
             byte lcdCursor = 0;
 
+            bool firstLoop = true;
+
             do
             {
                 int transferredIn;
                 byte[] readBuffer = new byte[38];
-                ErrorCode ecRead = reader.Transfer(readBuffer, 0, readBuffer.Length, 100, out transferredIn);
+                ErrorCode ecRead = reader.Transfer(readBuffer, 0, readBuffer.Length, 1000, out transferredIn);
                 if (ecRead != ErrorCode.None)
                 {
                     throw new Exception($"Submit Async Read Failed. ErrorCode: {ecRead}");
@@ -127,15 +127,16 @@ namespace Software
 
                 if (transferredIn > 0)
                 {
-
                     ushort touchReading = (ushort)((ushort)readBuffer[2] | (ushort)(((ushort)readBuffer[3]) << 8));
                     ushort ambientReading = (ushort)((ushort)readBuffer[4] | (ushort)(((ushort)readBuffer[5]) << 8));
-
+                    ambientReading = readBuffer[1];
                     for (int i = 0; i < ChannelCount; i++)
                     {
-                        enc[i] += (sbyte)(readBuffer[6 + 2 * i]);
+                        sbyte newenc = (sbyte)(readBuffer[6 + 2 * i]);
+                        sbyte encdiff = (sbyte)(firstLoop ? 0 : newenc - enc[i]);
+                        enc[i] = newenc;
                         byte[] newLedState, newLcdImage;
-                        _channels[i].HandleFrame((sbyte)readBuffer[6 + 2 * i], readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
+                        _channels[i].HandleFrame(encdiff, readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
                         if (newLedState != null) _wantedLedState[i] = newLedState;
                         if (newLcdImage != null) _wantedLcdImage[i] = newLcdImage;
                     }
@@ -181,7 +182,7 @@ namespace Software
                                 byte[] bytesToSend = _wantedLcdImage[lcdCursor];
                                 actualLcdImage[lcdCursor] = bytesToSend;
 
-                                bytesToSend = new byte[] { 4, 2, lcdCursor, 0 }.Concat(bytesToSend).ToArray();
+                                bytesToSend = new byte[] { 8, 2, lcdCursor, 0 }.Concat(bytesToSend).Concat(new byte[] { 0, 0, 0, 0 }).ToArray();
 
                                 int transferredOut;
                                 ErrorCode ecLcdWrite = Writer3.Transfer(bytesToSend, 0, bytesToSend.Length, 900, out transferredOut);
@@ -205,6 +206,8 @@ namespace Software
                 {
                     _logger.Warn("Didn't get an interrupt packet?????");
                 }
+
+                firstLoop = false;
 
             } while (!_cancellationTokenSource.Token.IsCancellationRequested);
         }
