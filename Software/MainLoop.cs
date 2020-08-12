@@ -18,7 +18,7 @@ namespace Software
         private const byte ChannelCount = 8;
         private static LoggingProvider _logger;
         private static CancellationTokenSource _cancellationTokenSource;
-        private static Channel[] _channels;
+        private static ScriptManager _scriptManager = null;
         private static byte[][] _wantedLedState = new byte[ChannelCount][]; // 21
         private static byte[][] _wantedLcdImage = new byte[ChannelCount][]; // 512
         private static Boolean _shouldLogConnection = true;
@@ -35,7 +35,11 @@ namespace Software
                 _shouldReloadConfig = false;
                 try
                 {
-                    _channels = ScriptManager.StartScript(_logger, config);
+                    if (_scriptManager != null)
+                    {
+                        _scriptManager.Dispose();
+                    }
+                    _scriptManager = new ScriptManager(_logger, config);
                 }
                 catch (Exception e)
                 {
@@ -145,7 +149,7 @@ namespace Software
                         sbyte encdiff = (sbyte)(firstLoop ? 0 : newenc - enc[i]);
                         enc[i] = newenc;
                         byte[] newLedState, newLcdImage;
-                        _channels[i].HandleFrame(encdiff, readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
+                        _scriptManager.channels[i].HandleFrame(encdiff, readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
                         if (newLedState != null) _wantedLedState[i] = newLedState;
                         if (newLcdImage != null) _wantedLcdImage[i] = newLcdImage;
                     }

@@ -7,6 +7,9 @@ using Microsoft.ClearScript;
 
 namespace Software.Channels
 {
+
+    public delegate Object ScriptChannelCallback(Int16 encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading);
+
     class ScriptChannel : Channel
     {
         private ScriptChannelCallback config;
