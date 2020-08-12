@@ -31,6 +31,8 @@ namespace Software
             var engine = new V8ScriptEngine("ghello");
             try
             {
+                // TODO: consider using the advice in https://github.com/Microsoft/ClearScript/issues/65 to avoid maintaining a reference to channels.
+
                 engine.AddHostObject("host", new ExtendedHostFunctions());
 
                 engine.AddHostObject("AddVolumeChannel", (Func<int, String, String, int>)((int c, String displayName, String exeSuffix) => { channels[c] = new VolumeChannel(displayName, exeSuffix, logger); return 0; }));
@@ -54,7 +56,10 @@ namespace Software
                 throw e;
             }
 
-            return channels.ToArray();
+            // HACK: prevent channels from keeping inaccessible VolumeChannel instances alive.
+            Channel[] ret = channels.ToArray();
+            channels.Clear();
+            return ret;
         }
     }
 }

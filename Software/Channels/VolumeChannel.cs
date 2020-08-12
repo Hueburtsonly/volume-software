@@ -113,20 +113,14 @@ namespace Software.Channels
         private AudioSessionControl session = null;
         private String exeSuffix;
         private String displayName;
-        private NewSessionHandler newSessionHandler;
 
         public VolumeChannel(String displayName, String exeSuffix, LoggingProvider logger)
         {
             this.displayName = displayName;
             this.exeSuffix = exeSuffix;
-            newSessionEvent += newSessionHandler = new NewSessionHandler(HandleNewSession);
+            new WeakSessionHandler(this);
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _shouldRefreshSessions = true;
-        }
-
-        ~VolumeChannel()
-        {
-            newSessionEvent -= newSessionHandler;
         }
 
         private void HandleNewSession(AudioSessionControl newSession, String filename)
@@ -236,6 +230,59 @@ namespace Software.Channels
             cycle++;
             if (cycle == 26) cycle = -24;
             // */
+        }
+
+
+        // WeakSessionHandler subscribes to be notified of new sessions, and maintains a weak
+        // reference to a VolumeChannel to which it passes on the notifications. The whole
+        // raison d'etre of this class is the weak reference which allows the VolumeChannel 
+        // to be reclaimed by the GC if it's not needed anymore.
+        private class WeakSessionHandler : IDisposable
+        {
+            private WeakReference<VolumeChannel> _proxied;
+            private bool disposedValue;
+            private NewSessionHandler newSessionHandler;
+
+            public WeakSessionHandler(VolumeChannel proxied)
+            {
+                _proxied = new WeakReference<VolumeChannel>(proxied);
+                newSessionEvent += newSessionHandler = new NewSessionHandler(HandleNewSession);
+            }
+
+
+            private void HandleNewSession(AudioSessionControl newSession, String filename)
+            {
+                VolumeChannel proxied;
+                if (_proxied.TryGetTarget(out proxied))
+                {
+                    proxied.HandleNewSession(newSession, filename);
+                }
+                else
+                {
+                    Dispose();
+                }
+            }
+
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    newSessionEvent -= newSessionHandler;
+                    disposedValue = true;
+                }
+            }
+
+            ~WeakSessionHandler()
+            {
+                Dispose(disposing: false);
+            }
+
+            public void Dispose()
+            {
+                Dispose(disposing: true);
+                GC.SuppressFinalize(this);
+            }
         }
     }
 }
