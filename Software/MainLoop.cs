@@ -20,7 +20,7 @@ namespace Software
         private static CancellationTokenSource _cancellationTokenSource;
         private static ScriptManager _scriptManager = null;
         private static byte[][] _wantedLedState = new byte[ChannelCount][]; // 21
-        private static byte[][] _wantedLcdImage = new byte[ChannelCount][]; // 512
+        private static Renderable[] _wantedLcdRenderable = new Renderable[ChannelCount];
         private static Boolean _shouldLogConnection = true;
         public static bool _shouldReloadConfig = true;
 
@@ -122,7 +122,7 @@ namespace Software
 
             sbyte[] enc = new sbyte[ChannelCount];
             byte[][] actualLedState = new byte[ChannelCount][];
-            byte[][] actualLcdImage = new byte[ChannelCount][];
+            Renderable[] actualLcdRenderable = new Renderable[ChannelCount];
             byte ledCursor = 0;
             byte lcdCursor = 0;
 
@@ -148,10 +148,11 @@ namespace Software
                         sbyte newenc = (sbyte)(readBuffer[6 + 2 * i]);
                         sbyte encdiff = (sbyte)(firstLoop ? 0 : newenc - enc[i]);
                         enc[i] = newenc;
-                        byte[] newLedState, newLcdImage;
-                        _scriptManager.channels[i].HandleFrame(encdiff, readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdImage);
+                        byte[] newLedState;
+                        Renderable newLcdRenderable;
+                        _scriptManager.channels[i].HandleFrame(encdiff, readBuffer[7 + 2 * i], touchReading, ambientReading, out newLedState, out newLcdRenderable);
                         if (newLedState != null) _wantedLedState[i] = newLedState;
-                        if (newLcdImage != null) _wantedLcdImage[i] = newLcdImage;
+                        if (newLcdRenderable != null) _wantedLcdRenderable[i] = newLcdRenderable;
                     }
 
                     {
@@ -190,10 +191,9 @@ namespace Software
                     {
                         for (int i = 0; i < ChannelCount; i++)
                         {
-                            if (_wantedLcdImage[lcdCursor] != null && (actualLcdImage[lcdCursor] == null || !_wantedLcdImage[lcdCursor].SequenceEqual(actualLcdImage[lcdCursor])))
+                            if (_wantedLcdRenderable[lcdCursor] != null && (actualLcdRenderable[lcdCursor] == null || !_wantedLcdRenderable[lcdCursor].Equals(actualLcdRenderable[lcdCursor])))
                             {
-                                byte[] bytesToSend = _wantedLcdImage[lcdCursor];
-                                actualLcdImage[lcdCursor] = bytesToSend;
+                                byte[] bytesToSend = (actualLcdRenderable[lcdCursor] = _wantedLcdRenderable[lcdCursor]).Render();
 
                                 bytesToSend = new byte[] { 8, 2, lcdCursor, 0 }.Concat(bytesToSend).Concat(new byte[] { 0, 0, 0, 0 }).ToArray();
 

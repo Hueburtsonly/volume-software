@@ -131,7 +131,7 @@ namespace Software.Channels
             }
         }
 
-        public void HandleFrame(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading, out byte[] ledState, out byte[] lcdImage)
+        public void HandleFrame(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading, out byte[] ledState, out Renderable lcdRenderable)
         {
             MaybeRefreshSessions();
 
@@ -194,11 +194,11 @@ namespace Software.Channels
             int newIsActive = isActive ? 1 : 0;
             if (prevIsActive != newIsActive)
             {
-                lcdImage = ImageUtil.RenderPlainText(isActive ? displayName : "");
+                lcdRenderable = new TextRenderable(isActive ? displayName : "", -1);
                 prevIsActive = newIsActive;
             } else
             {
-                lcdImage = null;
+                lcdRenderable = null;
             }
 
             ledState = new byte[21];

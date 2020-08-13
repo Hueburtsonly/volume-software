@@ -110,7 +110,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Channels\Channel.cs" />
-    <Compile Include="Channels\ImageUtil.cs" />
+    <Compile Include="Channels\Renderable.cs" />
     <Compile Include="Channels\ScriptChannel.cs" />
     <Compile Include="Channels\VolumeChannel.cs" />
     <Compile Include="Configuration\AppConfigurationValueProvider.cs" />

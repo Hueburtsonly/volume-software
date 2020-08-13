@@ -41,7 +41,7 @@ namespace Software.Channels
 
         Int16 accumEncoderDelta = 0;
 
-        public void HandleFrame(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading, out byte[] ledState, out byte[] lcdImage)
+        public void HandleFrame(sbyte encoderDelta, byte buttonState, ushort touchReading, ushort ambientReading, out byte[] ledState, out Renderable lcdRenderable)
         {
             accumEncoderDelta += encoderDelta;
             if (period != 0)
@@ -54,7 +54,7 @@ namespace Software.Channels
                 else if (stopwatch.ElapsedMilliseconds < nextMatchMs)
                 {
                     ledState = null;
-                    lcdImage = null;
+                    lcdRenderable = null;
                     return;
                 }
                 
@@ -72,12 +72,12 @@ namespace Software.Channels
 
             if (prevString != newString)
             {
-                lcdImage = ImageUtil.RenderPlainText(newString);
+                lcdRenderable = new TextRenderable(newString, -1);
                 prevString = newString;
             }
             else
             {
-                lcdImage = null;
+                lcdRenderable = null;
             }
 
             //Trace.Assert(ret.Tuple[1].Type == DataType.Table);
