@@ -37,6 +37,7 @@ namespace Software.Channels
 
             foreach (char c in s)
             {
+                int italic = (c >= '0' && c <= '9') ? 1 : 0;
                 int fx = 32 * (c % 16);
                 int fy = 32 * (c / 16);
                 for (int x = 0; x < 32; x++)
@@ -54,7 +55,11 @@ namespace Software.Channels
                         {
                             v = (byte)((v << 1) | ((font.GetPixel(fx + x, fy + ry * 8 + sy).G < 128) ? 1 : 0));
                         }
-                        ret[(3 - ry) * 128 + px] = v;
+                        int lx = px + (2 - ry) * italic;
+                        if (lx >= 0 && lx < 128)
+                        {
+                            ret[(3 - ry) * 128 + lx] |= v;
+                        }
                     }
 
                     px++;
