@@ -14,9 +14,9 @@ namespace Software.Channels
     class TextRenderable : Renderable
     {
         private String _text;
-        private int _statusBarLen;
+        private double _statusBarLen;
 
-        public TextRenderable(string text, int statusBarLen)
+        public TextRenderable(string text, double statusBarLen)
         {
             _text = text;
             _statusBarLen = statusBarLen;
@@ -24,7 +24,15 @@ namespace Software.Channels
 
         public override byte[] Render()
         {
-            return RenderPlainText(_text);
+            byte[] bytes = RenderPlainText(_text);
+            if (_statusBarLen >= 0)
+            {
+                for (int i = 0; i < 129 * _statusBarLen; i++)
+                {
+                    bytes[i] |= 7;
+                }
+            }
+            return bytes;
         }
 
         public static byte[] RenderPlainText(String s)
@@ -43,10 +51,43 @@ namespace Software.Channels
                 Font f = new Font("Corbel", 24, FontStyle.Regular, GraphicsUnit.Pixel);
 
                 //TextRenderer.DrawText(g, s, f, new Rectangle(0, 0, 128, 32), Color.Black, TextFormatFlags.NoPadding | TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
-                g.DrawString(s, f, Brushes.Black, new RectangleF(-2, 0, 140, 32));
+                g.DrawString(s, f, Brushes.Black, new RectangleF(-4, 0, 140, 32));
             }
 
-            return ToBytes(bm);
+            byte[] bytes = ToBytes(bm);
+
+            // Centre align.
+            {
+                int minx = 127;
+                int maxx = 0;
+                for (int x = 0; x < 128; x++)
+                {
+                    bool sawPixel = false;
+                    for (int y = 0; y < 4; y++)
+                    {
+                        if (bytes[128 * y + x] != 0)
+                        {
+                            sawPixel = true;
+                            break;
+                        }
+                    }
+                    if (sawPixel)
+                    {
+                        maxx = x;
+                        if (x < minx)
+                        {
+                            minx = x;
+                        }
+                    }
+                }
+                int shift = 64 - (minx + maxx) / 2;
+                if (shift < 0) shift = 0;
+                byte[] rotated = new byte[512];
+                Array.Copy(bytes, 0, rotated, shift, 512 - shift);
+                bytes = rotated;
+            }
+
+            return bytes;
         }
 
         public static byte[] ToBytes(Bitmap bm)
@@ -65,6 +106,11 @@ namespace Software.Channels
                 }
             }
             return ret;
+        }
+
+        public override bool Equals(Object other)
+        {
+            return other is TextRenderable && ((TextRenderable)other)._text.Equals(_text) && ((TextRenderable)other)._statusBarLen == _statusBarLen;
         }
     }
 

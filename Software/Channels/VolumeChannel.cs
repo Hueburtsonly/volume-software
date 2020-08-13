@@ -100,7 +100,6 @@ namespace Software.Channels
         // last time it moved.
         private int pipLocation = -1;
         private int timeSincePipRaised = 0;
-        private int prevIsActive = -1;
 
         // Keeps track of the highest peak value seen from this session, slowly decays over time.
         // Used to enable quieter apps to still use the full range of the LED display.
@@ -191,15 +190,7 @@ namespace Software.Channels
                 }
             }
 
-            int newIsActive = isActive ? 1 : 0;
-            if (prevIsActive != newIsActive)
-            {
-                lcdRenderable = new TextRenderable(isActive ? displayName : "", -1);
-                prevIsActive = newIsActive;
-            } else
-            {
-                lcdRenderable = null;
-            }
+            lcdRenderable = new TextRenderable(isActive ? displayName : "", (isActive && session != null) ? session.SimpleAudioVolume.Volume : 0);
 
             ledState = new byte[21];
             if (isActive)
