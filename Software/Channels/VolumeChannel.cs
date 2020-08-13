@@ -138,7 +138,14 @@ namespace Software.Channels
             bool isActive = false;
             if (session != null)
             {
-                if (encoderDelta != 0) session.SimpleAudioVolume.Volume += encoderDelta / 20.0f;
+                if (encoderDelta != 0)
+                {
+                    float volume = session.SimpleAudioVolume.Volume;
+                    volume += encoderDelta / 20.0f;
+                    if (volume > 1) volume = 1;
+                    if (volume < 0) volume = 0;
+                    session.SimpleAudioVolume.Volume = volume;
+                }
                 peak = session.AudioMeterInformation.MasterPeakValue;
                 isActive = (session.State == AudioSessionState.AudioSessionStateActive);
             }
