@@ -27,9 +27,9 @@ namespace Software.Channels
             byte[] bytes = RenderPlainText(_text);
             if (_statusBarLen >= 0)
             {
-                for (int i = 0; i < 129 * _statusBarLen; i++)
+                for (int i = 0; i < (int)(128 * _statusBarLen + 0.5); i++)
                 {
-                    bytes[i] |= 7;
+                    bytes[i] ^= 7;
                 }
             }
             return bytes;
