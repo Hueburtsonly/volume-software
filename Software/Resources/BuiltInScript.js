@@ -34,8 +34,20 @@ function AddTimeChannel(c) {
       if (min < 10) {
         min = '0' + min;
       }
+      var sec = d.getSeconds();
+      if (sec < 10) {
+        sec = '0' + sec;
+      }
 
-      return {text: '`' + '```````````````````' + hr + '`:`' + min, leds: BlankLeds(toggle(b, 1) ? 128 : 0)};
+      if (toggle(b, 1)) {
+      	return {text: '`' + '```````````````````' + hr + '`:`' + min + '````````````````````', leds: BlankLeds(128)};
+      } else {
+	      var sec = d.getSeconds();
+	      if (sec < 10) {
+	        sec = '0' + sec;
+	      }
+      	return {text: '`' + '' + hr + ';' + min + ';' + sec, leds: BlankLeds(128)};
+      }
     })/*.SetPeriod(1029)*/;
 }
 
