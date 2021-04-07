@@ -7,9 +7,6 @@ using System.Linq;
 using System.Threading;
 using Software.Configuration;
 using Software.Logging;
-using Microsoft.ClearScript.V8;
-using Microsoft.ClearScript;
-using System.Windows.Forms;
 
 namespace Software
 {
@@ -78,11 +75,10 @@ namespace Software
                 _logger.Info($"Connecting to VID: {vid} PID: {pid}");
             }
 
-            UsbDeviceFinder MyUsbFinder = new UsbDeviceFinder(vid, pid);
-            var MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
-            
+            UsbRegistry volumeControllerRegistry = UsbDevice.AllDevices.FirstOrDefault(d => d.Vid == vid && d.Pid == pid);
+
             // If the device is open and ready
-            if (MyUsbDevice == null)
+            if (volumeControllerRegistry == null || volumeControllerRegistry.Open(out var MyUsbDevice) == false)
             {
                 if (_shouldLogConnection)
                 {
