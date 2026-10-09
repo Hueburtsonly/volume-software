@@ -7,9 +7,9 @@ using Software.Logging;
 namespace Software
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// Entry point: runs the tray icon, and the main loop on its own thread.
     /// </summary>
-    public partial class App
+    public static class App
     {
         public static NotifyIcon notifyIcon = new NotifyIcon();
 

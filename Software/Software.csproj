@@ -2,9 +2,9 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <RootNamespace>Software</RootNamespace>
     <AssemblyName>Software</AssemblyName>
     <ApplicationIcon>Resources\MainIcon.ico</ApplicationIcon>
@@ -28,8 +28,6 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Remove="App.xaml" />
-    <Page Include="App.xaml" />
     <Content Include="Resources\BuiltInScript.js" />
     <Content Include="Resources\DefaultConfigScript.js" />
     <None Include="libusb-1.0.dll" CopyToOutputDirectory="PreserveNewest" />
