@@ -22,6 +22,11 @@ namespace Software
             var logger = new SerilogLoggingProvider();
             logger.Info("Software of Greatness starting.");
 
+            // Log exceptions that escape every handler (any thread) before the process dies.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                logger.Error(e.ExceptionObject as Exception ?? new Exception($"{e.ExceptionObject}"), "Unhandled exception, exiting.");
+
             var cancellationTokenSource = new CancellationTokenSource();
 
             var contextMenu = new ContextMenuStrip();

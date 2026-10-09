@@ -24,7 +24,7 @@ namespace Software.Channels
             _sessManager = _device.AudioSessionManager;
 
             //sessManager.AudioSessionControl.RegisterEventClient(this);
-            _sessManager.OnSessionCreated += new AudioSessionManager.SessionCreatedDelegate(OnSessionCreated);
+            _sessManager.OnSessionCreated += (sender, newSession) => OnSessionCreated();
 
             for (int i = 0; i < 10; i++)
             {
@@ -37,7 +37,7 @@ namespace Software.Channels
 
         }
 
-        public static void OnSessionCreated(object sender, IAudioSessionControl newSession)
+        public static void OnSessionCreated()
         {
             _shouldRefreshSessions = true;
         }

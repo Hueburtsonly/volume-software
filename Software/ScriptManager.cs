@@ -36,6 +36,10 @@ namespace Software
 
                 WeakReference<List<Channel>> weakChannelList = new WeakReference<List<Channel>>(channels);
 
+                // ScriptChannel is internal, so let scripts bind to members this
+                // assembly can see; otherwise SetPeriod is not callable.
+                _engine.AccessContext = typeof(ScriptManager);
+
                 _engine.AddHostObject("host", new ExtendedHostFunctions());
 
                 _engine.AddHostObject("AddVolumeChannel", (Func<int, String, String, int>)((int c, String displayName, String exeSuffix) => {

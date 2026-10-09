@@ -1,5 +1,6 @@
 ﻿using LibUsbDotNet;
 using LibUsbDotNet.Main;
+using LibUsbDotNet.LibUsb;
 using Software.Channels;
 using System;
 using System.Collections.Generic;
@@ -75,10 +76,14 @@ namespace Software
                 _logger.Info($"Connecting to VID: {vid} PID: {pid}");
             }
 
-            UsbRegistry volumeControllerRegistry = UsbDevice.AllDevices.FirstOrDefault(d => d.Vid == vid && d.Pid == pid);
+            using var usbContext = new UsbContext();
+            // Disposed before usbContext (reverse declaration order). Left to the
+            // finalizer, the device would be unreferenced after its context is gone,
+            // which crashes the process.
+            using var MyUsbDevice = usbContext.Find(d => d.VendorId == vid && d.ProductId == pid);
 
             // If the device is open and ready
-            if (volumeControllerRegistry == null || volumeControllerRegistry.Open(out var MyUsbDevice) == false)
+            if (MyUsbDevice == null || MyUsbDevice.TryOpen() == false)
             {
                 if (_shouldLogConnection)
                 {
@@ -94,22 +99,19 @@ namespace Software
             App.notifyIcon.Text = "Tray Icon of Greatness";
             App.notifyIcon.Icon = Software.Properties.Resources.MainIcon;
 
-            // If this is a "whole" usb device (libusb-win32, linux libusb)
-            // it will have an IUsbDevice interface. If not (WinUSB) the 
-            // variable will be null indicating this is an interface of a 
-            // device.
-            IUsbDevice wholeUsbDevice = MyUsbDevice as IUsbDevice;
-            if (!ReferenceEquals(wholeUsbDevice, null))
+            // Select config #1. Not every driver lets libusb-1.0 change the
+            // configuration; where it refuses, config #1 is already active.
+            try
             {
-                // This is a "whole" USB device. Before it can be used, 
-                // the desired configuration and interface must be selected.
-
-                // Select config #1
-                wholeUsbDevice.SetConfiguration(1);
-
-                // Claim interface #2.
-                wholeUsbDevice.ClaimInterface(2);
+                MyUsbDevice.SetConfiguration(1);
             }
+            catch (UsbException e)
+            {
+                _logger.Debug($"SetConfiguration(1) not applied: {e.Message}");
+            }
+
+            // Claim interface #0.
+            MyUsbDevice.ClaimInterface(0);
 
 
             UsbEndpointWriter Writer3 = MyUsbDevice.OpenEndpointWriter(WriteEndpointID.Ep03);
@@ -128,8 +130,8 @@ namespace Software
             {
                 int transferredIn;
                 byte[] readBuffer = new byte[38];
-                ErrorCode ecRead = reader.Transfer(readBuffer, 0, readBuffer.Length, 1000, out transferredIn);
-                if (ecRead != ErrorCode.None)
+                Error ecRead = reader.Read(readBuffer, 0, readBuffer.Length, 1000, out transferredIn);
+                if (ecRead != Error.Success)
                 {
                     throw new Exception($"Submit Async Read Failed. ErrorCode: {ecRead}");
                 }
@@ -176,8 +178,8 @@ namespace Software
                             byte[] bytesToSend = buffer.ToArray();
 
                             int transferredOut;
-                            ErrorCode ecWrite = Writer4.Transfer(bytesToSend, 0, bytesToSend.Length, 100, out transferredOut);
-                            if (ecWrite != ErrorCode.None)
+                            Error ecWrite = Writer4.Write(bytesToSend, 0, bytesToSend.Length, 100, out transferredOut);
+                            if (ecWrite != Error.Success)
                             {
                                 // usbReadTransfer.Dispose();
                                 throw new Exception($"Submit Async Write Failed on Writer4. ErrorCode: {ecWrite}");
@@ -194,8 +196,8 @@ namespace Software
                                 bytesToSend = new byte[] { 8, 2, lcdCursor, 0 }.Concat(bytesToSend).Concat(new byte[] { 0, 0, 0, 0 }).ToArray();
 
                                 int transferredOut;
-                                ErrorCode ecLcdWrite = Writer3.Transfer(bytesToSend, 0, bytesToSend.Length, 900, out transferredOut);
-                                if (ecLcdWrite != ErrorCode.None)
+                                Error ecLcdWrite = Writer3.Write(bytesToSend, 0, bytesToSend.Length, 900, out transferredOut);
+                                if (ecLcdWrite != Error.Success)
                                 {
                                     // usbReadTransfer.Dispose();
                                     throw new Exception($"Submit Async Write Failed on Writer3. ErrorCode: {ecLcdWrite}");
@@ -219,6 +221,7 @@ namespace Software
                 firstLoop = false;
             } while (!_cancellationTokenSource.Token.IsCancellationRequested && !_shouldReloadConfig);
 
+            MyUsbDevice.ReleaseInterface(0);
             MyUsbDevice.Close();
         }
     }
